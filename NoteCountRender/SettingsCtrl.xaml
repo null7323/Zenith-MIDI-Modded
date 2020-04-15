@@ -1,0 +1,82 @@
+﻿<UserControl x:Class="NoteCountRender.SettingsCtrl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:ZenithEngine.UI;assembly=ZenithEngine"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:NoteCountRender"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="pack://siteoforigin:,,,/Languages/en/notecounter.xaml" />
+                        <ResourceDictionary Source="pack://application:,,,/ZenithEngine;component/UI/Material.xaml"/>
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="TabControl" BasedOn="{StaticResource SubTabs}"/>
+            <Style TargetType="TabItem" BasedOn="{StaticResource SubTabItems}"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <TabControl Margin="10,10,10,10">
+            <TabItem Header="Render">
+                <DockPanel Margin="10">
+                    <DockPanel DockPanel.Dock="Top">
+                        <StackPanel>
+                            <DockPanel HorizontalAlignment="Left" LastChildFill="False" Margin="0,0,0,0" VerticalAlignment="Top">
+                                <Label DockPanel.Dock="Left" Content="{DynamicResource fontSize}" VerticalAlignment="Top"/>
+                                <ui:NumberSelect x:Name="fontSize" Value="1"  Maximum="15360" Minimum="1" HorizontalAlignment="Left" Width="99" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}"  DockPanel.Dock="Left" Margin="5,0,0,0" ValueChanged="FontSize_ValueChanged"  />
+                                <Label DockPanel.Dock="Left" Content="{DynamicResource font}" VerticalAlignment="Top"/>
+                                <ComboBox x:Name="fontSelect" DockPanel.Dock="Left" Width="120" Margin="5,0,0,0" SelectionChanged="FontSelect_SelectionChanged"/>
+                                <ComboBox x:Name="fontStyle" HorizontalAlignment="Left" Margin="10,0,0,0" Width="120" SelectionChanged="FontStyle_SelectionChanged"/>
+                            </DockPanel>
+                            <DockPanel HorizontalAlignment="Left" LastChildFill="False" Margin="0,10,0,0" VerticalAlignment="Top" >
+                                <Label Content="{DynamicResource alignments}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
+                                <ComboBox x:Name="alignSelect" DockPanel.Dock="Left" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Top" Height="26" SelectedIndex="0" SelectionChanged="AlignSelect_SelectionChanged">
+                                    <ComboBoxItem Content="{DynamicResource alTopLeft}"/>
+                                    <ComboBoxItem Content="{DynamicResource alTopRight}"/>
+                                    <ComboBoxItem Content="{DynamicResource alBottomLeft}"/>
+                                    <ComboBoxItem Content="{DynamicResource alBottomRight}"/>
+                                    <ComboBoxItem Content="{DynamicResource alTopSpread}"/>
+                                    <ComboBoxItem Content="{DynamicResource alBottomSpread}"/>
+                                </ComboBox>
+                            </DockPanel>
+                            <DockPanel HorizontalAlignment="Left" LastChildFill="False" Margin="0,10,0,0" VerticalAlignment="Top">
+                                <ComboBox x:Name="templates" DockPanel.Dock="Left" Width="120" SelectionChanged="Templates_SelectionChanged"/>
+                                <Button x:Name="reload" Content="{DynamicResource reload}" HorizontalAlignment="Left" Padding="10,0,10,0" DockPanel.Dock="Left" Margin="5,0,0,0" Click="Reload_Click"/>
+                                <Button x:Name="openFolder" Content="{DynamicResource openFolder}" HorizontalAlignment="Left" Padding="10,0,10,0" DockPanel.Dock="Left" Margin="5,0,0,0" Click="openFolder_Click"/>
+                            </DockPanel>
+                        </StackPanel>
+                        <StackPanel Margin="30,0,0,0">
+                            <Label Content="{DynamicResource thousandsSeparator}"/>
+                            <ui:BetterRadio x:Name="useCommas" IsChecked="True" Text="{DynamicResource commas}" Margin="0,0,0,5" RadioChecked="useCommas_RadioChecked"/>
+                            <!--<ui:BetterRadio x:Name="useDots" Text="Dots" Margin="0,0,0,5" RadioChecked="useCommas_RadioChecked"/>-->
+                            <ui:BetterRadio x:Name="useNothing" Text="{DynamicResource nothing}" Margin="0,0,0,5" RadioChecked="useCommas_RadioChecked"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBox AcceptsReturn="True" VerticalContentAlignment="Top" x:Name="textTemplate" Margin="0,10,0,0" TextWrapping="Wrap" Text="TextBox" TextChanged="TextTemplate_TextChanged"/>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Save Data">
+                <StackPanel Margin="10">
+                    <ui:BetterCheckbox Name="saveCsv" CheckToggled="saveCsv_Checked" Text="{DynamicResource saveToFile}" Margin="0,0,0,0"/>
+                    <DockPanel Height="26" LastChildFill="True" Margin="0,10,0,0">
+                        <Label HorizontalAlignment="Left" Margin="0,0,0,0" Content="{DynamicResource savePath}"/>
+                        <Button x:Name="browseOutputSaveButton" Content="{DynamicResource browse}" HorizontalAlignment="Left" Margin="10,0,0,0" Padding="20,0,20,0" Click="browseOutputSaveButton_Click"/>
+                        <TextBox x:Name="csvPath" Margin="10,0,0,0" IsEnabled="False" TextWrapping="Wrap" Text=""/>
+                    </DockPanel>
+                    <DockPanel Height="26" LastChildFill="True" Margin="0,10,0,0">
+                        <Label HorizontalAlignment="Left" Margin="0,0,0,0" Content="{DynamicResource formatString}"/>
+                        <TextBox x:Name="csvFormat" Margin="10,0,0,0" TextWrapping="Wrap" Text="" TextChanged="csvFormat_TextChanged"/>
+                    </DockPanel>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</UserControl>

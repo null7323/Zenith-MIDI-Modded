@@ -31,6 +31,8 @@
     <system:String x:Key="changeSize">Change Size</system:String>
     <system:String x:Key="changeTint">Change Tint</system:String>
     <system:String x:Key="showKeyboard">Show Keyboard</system:String>
+    <!--Note Width-->
+    <system:String x:Key="noteWidth">Note Width Ratio</system:String>
 
     <!--Camera-->
     <system:String x:Key="speedWarning">WARNING: This plug-in can use much more ram and CPU due to the higher note time on screen. The more notes are visible, the slower the render!</system:String>

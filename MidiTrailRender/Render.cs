@@ -286,6 +286,9 @@ void main()
         long lastAuraTexChange;
         int auraTex;
 
+        // set note ratio
+        double noteWidthRatio;
+
         void loadImage(Bitmap image, int texID)
         {
             GL.BindTexture(TextureTarget.Texture2D, texID);
@@ -930,6 +933,8 @@ void main()
             camRot = settings.camRot;
             camSpin = settings.camSpin;
             fov /= 1;
+            // get note width ratio
+            noteWidthRatio = settings.noteWidthRatio;
             for (int i = 0; i < 514; i++) keyColors[i] = Color4.Transparent;
             for (int i = 0; i < 256; i++) auraSize[i] = 0;
             for (int i = 0; i < keyPressFactor.Length; i++) keyPressFactor[i] = Math.Max(keyPressFactor[i] / 1.05 - noteUpSpeed, 0);
@@ -1048,6 +1053,11 @@ void main()
                             float shade = 0;
                             x1d = x1array[k] - 0.5;
                             wdthd = wdtharray[k];
+                            // set note width
+                            wdthd *= noteWidthRatio;
+                            // fix offset
+                            x1d += (1 - noteWidthRatio) * 0.0045;
+                            // end
                             y1 = n.end - midiTime;
                             y2 = n.start - midiTime;
                             if (eatNotes && y1 < 0) y1 = 0;
@@ -1144,6 +1154,11 @@ void main()
                             shade = 0;
                             x1d = x1array[k] - 0.5;
                             wdthd = wdtharray[k];
+                            // set note width
+                            wdthd *= noteWidthRatio;
+                            // fix offset
+                            x1d += (1 - noteWidthRatio) * 0.0045;
+                            // end
                             x2d = x1d + wdthd;
                             y1 = n.end - midiTime;
                             y2 = n.start - midiTime;
@@ -1361,6 +1376,11 @@ void main()
 
                             x1d = x1array[k] - 0.5;
                             wdthd = wdtharray[k];
+                            // set note width
+                            wdthd *= noteWidthRatio;
+                            // fix offset
+                            x1d += (1 - noteWidthRatio) * 0.0045;
+                            // end
                             x2d = x1d + wdthd;
                             y1 = n.end - midiTime;
                             y2 = n.start - midiTime;
@@ -1561,10 +1581,15 @@ void main()
             GL.UniformMatrix4(uCircleMVP, false, ref mvp);
 
             circleBuffPos = 0;
-            for (int n = firstNote; n < lastNote; n++)
+            for (int n = firstNote; n < lastNote; ++n)
             {
                 x1d = x1array[n] - 0.5;
                 wdthd = wdtharray[n];
+                // set note width
+                wdthd *= noteWidthRatio;
+                // fix offset
+                x1d += (1 - noteWidthRatio) * 0.0045;
+                // end
                 x2d = x1d + wdthd;
                 double size = circleRadius * 12 * auraSize[n];
                 if (!blackKeys[n])
@@ -2025,6 +2050,7 @@ void main()
             noteBuffPos = 0;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         bool isBlackNote(int n)
         {
             n %= 12;

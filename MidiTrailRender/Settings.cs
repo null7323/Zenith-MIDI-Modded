@@ -50,5 +50,7 @@ namespace MIDITrailRender
         public float noteBrightness = 1;
 
         public bool tickBased = true;
+        // note width ratio
+        public double noteWidthRatio = 1.0;
     }
 }

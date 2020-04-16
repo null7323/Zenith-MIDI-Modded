@@ -110,25 +110,25 @@ namespace MIDITrailRender
         private void BoxNotes_Checked(object sender, RoutedEventArgs e)
         {
             if (settings == null) return;
-            settings.boxNotes = (bool)boxNotes.IsChecked;
+            settings.boxNotes = boxNotes.IsChecked;
         }
 
         private void FOVSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
-            settings.FOV = (double)FOVSlider.Value / 180 * Math.PI;
+            settings.FOV = FOVSlider.Value / 180 * Math.PI;
         }
 
         private void ViewAngSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
-            settings.camAng = (double)viewAngSlider.Value / 180 * Math.PI;
+            settings.camAng = viewAngSlider.Value / 180 * Math.PI;
         }
 
         private void ViewTurnSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
-            settings.camRot = (double)viewTurnSlider.Value / 180 * Math.PI;
+            settings.camRot = viewTurnSlider.Value / 180 * Math.PI;
         }
 
         private void NoteDeltaScreenTime_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -140,14 +140,22 @@ namespace MIDITrailRender
         private void RenderDistSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
-            settings.viewdist = (double)renderDistSlider.Value;
+            settings.viewdist = renderDistSlider.Value;
         }
 
         private void RenderDistBackSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
-            settings.viewback = (double)renderDistBackSlider.Value;
+            settings.viewback = renderDistBackSlider.Value;
         }
+
+        // note ratio
+        private void NoteWidthRatio_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (settings == null) return;
+            settings.noteWidthRatio = noteWidthRatio.Value;
+        }
+        // end
 
         private void FarPreset_Click(object sender, RoutedEventArgs e)
         {
@@ -238,7 +246,7 @@ namespace MIDITrailRender
         {
             try
             {
-                settings.useVel = (bool)useVel.IsChecked;
+                settings.useVel = useVel.IsChecked;
             }
             catch { }
         }
@@ -246,13 +254,13 @@ namespace MIDITrailRender
         private void CheckboxChecked(object sender, RoutedEventArgs e)
         {
             if (settings == null) return;
-                if (sender == notesChangeSize) settings.notesChangeSize = (bool)notesChangeSize.IsChecked;
-                if (sender == notesChangeTint) settings.notesChangeTint = (bool)notesChangeTint.IsChecked;
-                if (sender == eatNotes) settings.eatNotes = (bool)eatNotes.IsChecked;
-                if (sender == sameWidthNotes) settings.sameWidthNotes = (bool)sameWidthNotes.IsChecked;
-                if (sender == lightShade) settings.lightShade = (bool)lightShade.IsChecked;
-                if (sender == tiltKeys) settings.tiltKeys = (bool)tiltKeys.IsChecked;
-                if (sender == showKeyboard) settings.showKeyboard = (bool)showKeyboard.IsChecked;
+                if (sender == notesChangeSize) settings.notesChangeSize = notesChangeSize.IsChecked;
+                if (sender == notesChangeTint) settings.notesChangeTint = notesChangeTint.IsChecked;
+                if (sender == eatNotes) settings.eatNotes = eatNotes.IsChecked;
+                if (sender == sameWidthNotes) settings.sameWidthNotes = sameWidthNotes.IsChecked;
+                if (sender == lightShade) settings.lightShade = lightShade.IsChecked;
+                if (sender == tiltKeys) settings.tiltKeys = tiltKeys.IsChecked;
+                if (sender == showKeyboard) settings.showKeyboard = showKeyboard.IsChecked;
         }
 
         private void NewProfile_Click(object sender, RoutedEventArgs e)
@@ -328,7 +336,7 @@ namespace MIDITrailRender
         {
             try
             {
-                settings.camSpin = (double)viewSpinSlider.Value / 180 * Math.PI;
+                settings.camSpin = viewSpinSlider.Value / 180 * Math.PI;
             }
             catch { }
         }

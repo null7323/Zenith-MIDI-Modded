@@ -57,9 +57,17 @@
                         <ui:BetterCheckbox x:Name="eatNotes" Text="{DynamicResource keyboardClip}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" CheckToggled="CheckboxChecked"/>
                         <ui:BetterCheckbox x:Name="sameWidthNotes" Text="{DynamicResource sameWidthNotes}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" CheckToggled="CheckboxChecked"/>
                         <ui:BetterCheckbox x:Name="showKeyboard" Text="{DynamicResource showKeyboard}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" CheckToggled="CheckboxChecked" IsChecked="True"/>
+                        <!--Note Width-->
+                        <DockPanel>
+                            <Label x:Name="setNoteWidth" Content="{DynamicResource noteWidth}" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                            <ui:ValueSlider x:Name="noteWidthRatio" DecimalPoints="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="185" Maximum="1" TrueMax="1" Minimum="0.5" TrueMin="0.5" Margin="15,5,0,0" Value="1" DockPanel.Dock="Left" ValueChanged="NoteWidthRatio_ValueChanged"/>
+                        </DockPanel>
+                        <!--End-->
                         <Label Content="{DynamicResource onNoteHit}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top"/>
-                        <ui:BetterCheckbox x:Name="notesChangeSize" Text="{DynamicResource changeSize}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" CheckToggled="CheckboxChecked"/>
-                        <ui:BetterCheckbox x:Name="notesChangeTint" Text="{DynamicResource changeTint}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" CheckToggled="CheckboxChecked"/>
+                        <DockPanel>
+                            <ui:BetterCheckbox x:Name="notesChangeSize" Text="{DynamicResource changeSize}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" CheckToggled="CheckboxChecked" DockPanel.Dock="Left"/>
+                            <ui:BetterCheckbox x:Name="notesChangeTint" Text="{DynamicResource changeTint}" HorizontalAlignment="Left" Margin="80,0,0,0" VerticalAlignment="Top" CheckToggled="CheckboxChecked" DockPanel.Dock="Left"/>
+                        </DockPanel>
                     </StackPanel>
                     <bme:NoteColorPalettePick x:FieldModifier="public" x:Name="paletteList" Margin="0,10,10,10" HorizontalAlignment="Right" Width="184"/>
                 </DockPanel>

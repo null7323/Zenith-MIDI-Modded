@@ -11,7 +11,6 @@
 
 #### Known Bugs | 已知的漏洞
 
-- There's no sound when previewing | 预览时没有声音
 - 'Notes drawn' is always 0 when using 'Scripted' | 使用Scripted插件时绘制的音符总是0
 - Encoder 'png' may not work correctly | "png" 编码器可能不会正常工作
 

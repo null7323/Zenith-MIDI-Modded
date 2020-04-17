@@ -222,6 +222,20 @@ namespace MIDITrailRender
             renderDistBackSlider.Value = 0.98;
         }
 
+        // very close
+        private void VeryClosePreset_Click(object sender, RoutedEventArgs e)
+        {
+            camOffsetX.Value = -0.2M;
+            camOffsetY.Value = 0.7M;
+            camOffsetZ.Value = 0.0M;
+            FOVSlider.Value = 50;
+            viewAngSlider.Value = 90.00;
+            viewTurnSlider.Value = 0;
+            viewSpinSlider.Value = 0;
+            renderDistSlider.Value = 3;
+            renderDistBackSlider.Value = 1;
+        }
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             settings.palette = paletteList.SelectedImage;

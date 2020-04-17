@@ -42,6 +42,8 @@
     <system:String x:Key="mediumPreset">Medium</system:String>
     <system:String x:Key="closerPreset">Closer</system:String>
     <system:String x:Key="closePreset">Close</system:String>
+    <!--New Preset-->
+    <system:String x:Key="veryClosePreset">Very Close</system:String>
 
     <system:String x:Key="verticalNotes">Vertical Notes</system:String>
     <system:String x:Key="FOV">FOV</system:String>

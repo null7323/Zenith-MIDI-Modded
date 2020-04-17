@@ -39,6 +39,8 @@ namespace ZenithEngine
 
         public int unendedTracks = 0;
 
+        public bool loadedMidi = false;
+
         RenderSettings settings;
 
         public MidiFile(string filename, RenderSettings settings)
@@ -252,7 +254,7 @@ namespace ZenithEngine
 
             double time = 0;
             long ticks = maxTrackTime;
-            double multiplier = ((double)500000 / division) / 1000000;
+            double multiplier = (double)500000 / division / 1000000;
             long lastt = 0;
             foreach (var t in Tempos)
             {
@@ -260,7 +262,7 @@ namespace ZenithEngine
                 time += offset * multiplier;
                 ticks -= offset;
                 lastt = t.pos;
-                multiplier = ((double)t.tempo / division) / 1000000;
+                multiplier = (double)t.tempo / division / 1000000;
             }
 
             time += ticks * multiplier;
@@ -269,6 +271,8 @@ namespace ZenithEngine
 
             maxTrackTime = tracklens.Max();
             unendedTracks = trackcount;
+            // loaded midi
+            loadedMidi = true;
         }
 
         public void SetZeroColors()
@@ -293,6 +297,7 @@ namespace ZenithEngine
         {
             foreach (var t in tracks) t.Dispose();
             MidiFileReader.Dispose();
+            loadedMidi = false;
         }
     }
 }

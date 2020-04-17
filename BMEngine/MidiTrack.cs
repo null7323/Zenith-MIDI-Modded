@@ -299,7 +299,7 @@ namespace ZenithEngine
                         globalPlaybackEvents.Add(new PlaybackEvent()
                         {
                             pos = time,
-                            val = command | (note << 8) | (vel * 26)
+                            val = command | (note << 8) | (vel << 16)
                         });
                     }
                     if (vel == 0)
@@ -325,8 +325,8 @@ namespace ZenithEngine
                         };
                         if (UnendedNotes == null)
                         {
-                            UnendedNotes = new FastList<Note>[256 * 16];
-                            for (int i = 0; i < 256 * 16; i++)
+                            UnendedNotes = new FastList<Note>[256 << 4];
+                            for (int i = 0; i < 256 << 4; i++)
                             {
                                 UnendedNotes[i] = new FastList<Note>();
                             }
@@ -352,7 +352,7 @@ namespace ZenithEngine
                                 globalPlaybackEvents.Add(new PlaybackEvent()
                                 {
                                     pos = time,
-                                    val = command | (note << 8) | (vel * 26)
+                                    val = command | (note << 8) | (vel << 16)
                                 });
                             }
                             n.end = time;
@@ -372,7 +372,7 @@ namespace ZenithEngine
                         globalPlaybackEvents.Add(new PlaybackEvent()
                         {
                             pos = time,
-                            val = command | (note << 8) | (vel * 26)
+                            val = command | (note << 8) | (vel << 16)
                         });
                     }
                 }
@@ -413,7 +413,7 @@ namespace ZenithEngine
                         globalPlaybackEvents.Add(new PlaybackEvent()
                         {
                             pos = time,
-                            val = command | (l << 8) | (m * 26)
+                            val = command | (l << 8) | (m << 16)
                         });
                     }
                 }
@@ -427,7 +427,7 @@ namespace ZenithEngine
                         globalPlaybackEvents.Add(new PlaybackEvent()
                         {
                             pos = time,
-                            val = command | (cc << 8) | (vv * 26)
+                            val = command | (cc << 8) | (vv << 16)
                         });
                     }
                 }
@@ -773,18 +773,25 @@ namespace ZenithEngine
                                 throw new Exception("Corrupt Track");
                             }
                             int btempo = 0;
-                            for (int i = 0; i != 3; i++)
-                                btempo = (btempo << 8) | reader.Read();
+                            /*for (int i = 0; i != 3; i++)
+                                btempo = (btempo << 8) | reader.Read();*/
+                            // removed loop
+                            btempo = (btempo << 8) | reader.Read();
+                            btempo = (btempo << 8) | reader.Read();
+                            btempo = (btempo << 8) | reader.Read();
                             if (!timebase)
                             {
-                                Tempo t = new Tempo();
-                                t.pos = trackTime;
-                                t.tempo = btempo;
+                                Tempo t = new Tempo
+                                {
+                                    pos = trackTime,
+                                    tempo = btempo
+                                };
 
-                                lock (globalTempoEvents)
+                                /*lock (globalTempoEvents)
                                 {
                                     globalTempoEvents.Add(t);
-                                }
+                                }*/
+                                globalTempoEvents.Add(t);
                             }
                             midi.tempoTickMultiplier = (double)midi.division / btempo * 1000;
                             break;

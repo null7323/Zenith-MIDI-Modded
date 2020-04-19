@@ -245,7 +245,8 @@ void main()
         int uvBufferID;
         int texIDBufferID;
 
-        int quadBufferLength = 2048 * 64;
+        // int quadBufferLength = 2048 * 64;
+        const int quadBufferLength = 2048 * 64;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         double[] quadUVbuff;
@@ -253,7 +254,7 @@ void main()
         int quadBufferPos = 0;
 
         int indexBufferId;
-        uint[] indexes = new uint[2048 * 128 * 6];
+        uint[] indexes = new uint[(2048 << 7) * 6];
 
         double[] x1arrayKeys = new double[257];
         double[] x1arrayNotes = new double[257];
@@ -387,7 +388,7 @@ void main()
 
             int loc;
             int[] samplers = new int[12];
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 12; ++i)
             {
                 samplers[i] = i;
             }
@@ -412,10 +413,10 @@ void main()
             }
         
 
-            quadVertexbuff = new double[quadBufferLength * 8];
-            quadColorbuff = new float[quadBufferLength * 16];
-            quadUVbuff = new double[quadBufferLength * 8];
-            quadTexIDbuff = new float[quadBufferLength * 4];
+            quadVertexbuff = new double[quadBufferLength << 3];
+            quadColorbuff = new float[quadBufferLength << 4];
+            quadUVbuff = new double[quadBufferLength << 3];
+            quadTexIDbuff = new float[quadBufferLength << 2];
 
             GL.GenBuffers(1, out vertexBufferID);
             GL.GenBuffers(1, out colorBufferID);
@@ -435,7 +436,7 @@ void main()
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBufferId);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
-                (IntPtr)(indexes.Length * 4),
+                (IntPtr)(indexes.Length << 2),
                 indexes,
                 BufferUsageHint.StaticDraw);
 
@@ -575,7 +576,7 @@ void main()
             int texSlot = -1;
             if (tex != null) texSlot = FindTexSlot(tex.texId);
 
-            int pos = quadBufferPos * 8;
+            int pos = quadBufferPos << 3;
             quadVertexbuff[pos++] = left;
             quadVertexbuff[pos++] = top;
             quadVertexbuff[pos++] = right;
@@ -585,7 +586,7 @@ void main()
             quadVertexbuff[pos++] = left;
             quadVertexbuff[pos++] = bottom;
 
-            pos = quadBufferPos * 16;
+            pos = quadBufferPos << 4;
             quadColorbuff[pos++] = topLeft.R;
             quadColorbuff[pos++] = topLeft.G;
             quadColorbuff[pos++] = topLeft.B;
@@ -603,7 +604,7 @@ void main()
             quadColorbuff[pos++] = bottomLeft.B;
             quadColorbuff[pos++] = bottomLeft.A;
 
-            pos = quadBufferPos * 8;
+            pos = quadBufferPos << 3;
             quadUVbuff[pos++] = uvLeft;
             quadUVbuff[pos++] = uvTop;
             quadUVbuff[pos++] = uvRight;
@@ -613,7 +614,7 @@ void main()
             quadUVbuff[pos++] = uvLeft;
             quadUVbuff[pos++] = uvBottom;
 
-            pos = quadBufferPos * 4;
+            pos = quadBufferPos << 2;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
@@ -627,7 +628,7 @@ void main()
             int texSlot = -1;
             if (tex != null) texSlot = FindTexSlot(tex.texId);
 
-            int pos = quadBufferPos * 8;
+            int pos = quadBufferPos << 3;
             quadVertexbuff[pos++] = v1.X;
             quadVertexbuff[pos++] = v1.Y;
             quadVertexbuff[pos++] = v2.X;
@@ -637,7 +638,7 @@ void main()
             quadVertexbuff[pos++] = v4.X;
             quadVertexbuff[pos++] = v4.Y;
 
-            pos = quadBufferPos * 16;
+            pos = quadBufferPos << 4;
             quadColorbuff[pos++] = c1.R;
             quadColorbuff[pos++] = c1.G;
             quadColorbuff[pos++] = c1.B;
@@ -655,7 +656,7 @@ void main()
             quadColorbuff[pos++] = c4.B;
             quadColorbuff[pos++] = c4.A;
 
-            pos = quadBufferPos * 8;
+            pos = quadBufferPos << 3;
             quadUVbuff[pos++] = uv1.X;
             quadUVbuff[pos++] = uv1.Y;
             quadUVbuff[pos++] = uv2.X;
@@ -665,7 +666,7 @@ void main()
             quadUVbuff[pos++] = uv4.X;
             quadUVbuff[pos++] = uv4.Y;
 
-            pos = quadBufferPos * 4;
+            pos = quadBufferPos << 2;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
@@ -674,6 +675,7 @@ void main()
             FlushQuadBuffer(true);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         int FindTexSlot(int id)
         {
             /*for (int i = 0; i < 12; i++)

@@ -52,7 +52,7 @@
     <system:String x:Key="crfHint">FFMPEG crf: 0 = lossless, 51 = worst quality possible</system:String>
     <system:String x:Key="delatStart">Delay start (seconds)</system:String>
     <!--More...-->
-    <system:String x:Key="threadsUsing">Filter Threads</system:String>
+    <system:String x:Key="filterThreadsUsing">Filter Threads</system:String>
     <system:String x:Key="encoders">Encoder For Rendering</system:String>
     <system:String x:Key="yuv">YUV</system:String>
     <!--End-->

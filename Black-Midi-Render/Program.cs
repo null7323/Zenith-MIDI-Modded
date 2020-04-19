@@ -20,7 +20,7 @@ namespace Zenith_MIDI
             try
             {
 #endif
-                Console.Title = "Zenith 2.0.6";
+                Console.Title = "Zenith 2.0.6 (Modified Version 3)";
                 Console.WriteLine("Zenith 2.0.6 | Modified by TBL & qishipai");
                 // just tips
                 Console.WriteLine("警告: 此版本可能不稳定");

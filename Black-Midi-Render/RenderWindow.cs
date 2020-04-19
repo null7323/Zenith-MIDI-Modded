@@ -62,7 +62,7 @@ void main()
     UV = vec2(position.x, position.y);
 }
 ";
-        const string postShaderFrag = @"#version 330 compatibility
+        /*const string postShaderFrag = @"#version 330 compatibility
 
 in vec2 UV;
 
@@ -75,6 +75,19 @@ void main()
     color = texture2D( TextureSampler, UV );
     color.a = sqrt(color.a);
     color.rgb /= color.a;
+}
+";*/
+        const string postShaderFrag = @"#version 330 compatibility
+
+in vec2 UV;
+
+out vec4 color;
+
+uniform sampler2D TextureSampler;
+
+void main()
+{
+    color = texture2D( TextureSampler, UV );
 }
 ";
         const string postShaderFragDownscale = @"#version 330 compatibility
@@ -252,13 +265,6 @@ void main()
         {
             Process ffmpeg = new Process();
             string args = "-hide_banner";
-            if ((settings.encoder != "libxvid") && (settings.yuvcode == "444p"))
-            {
-                MessageBox.Show("YUV 444p is only available when 'libxvid' encoder is chosen. \nYUV 444P参数仅在使用XVID编码器时可用." + 
-                    "\nZenith will use YUV 420p to render.\nZenith将使用YUV420P进行渲染");
-                settings.yuvcode = "420p";
-                
-            }
             if (settings.includeAudio)
             {
                 if (settings.encoder == "png")
@@ -440,14 +446,14 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, screenQuadBuffer);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(screenQuadArray.Length * 8),
+                (IntPtr)(screenQuadArray.Length << 3),
                 screenQuadArray,
                 BufferUsageHint.StaticDraw);
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, screenQuadIndexBuffer);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
-                (IntPtr)(screenQuadArrayIndex.Length * 4),
+                (IntPtr)(screenQuadArrayIndex.Length << 2),
                 screenQuadArrayIndex,
                 BufferUsageHint.StaticDraw);
 
@@ -516,7 +522,7 @@ void main()
         const long lastBGChangeTime = -1;
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            Task.Factory.StartNew(() => PlaybackLoop(), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => PlaybackLoop(), TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
             SpinWait.SpinUntil(() => playbackLoopStarted);
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -638,7 +644,7 @@ void main()
                             midiTime = t.pos;
                         }
                     }
-                    if (!settings.Paused) midiTime += mv * tempoFrameStep * settings.tempoMultiplier;
+                    midiTime += mv * tempoFrameStep * settings.tempoMultiplier;
                 }
                 frameStartTime = DateTime.Now.Ticks;
                 if (settings.timeBasedNotes) microsecondsPerTick = 10000;
@@ -853,7 +859,7 @@ void main()
         {
             base.OnKeyDown(e);
             if (e.Key == Key.Space && !settings.ffRender) settings.Paused = !settings.Paused;
-            /*if (e.Key == Key.Right && !settings.ffRender)
+            if (e.Key == Key.Right && !settings.ffRender)
             {
                 int skip = 5000;
                 if (e.Modifiers == KeyModifiers.Control) skip = 20000;
@@ -872,7 +878,6 @@ void main()
                     }
                 }
             }
-            */ // not useful
             if (e.Key == Key.Enter)
             {
                 if (WindowState != WindowState.Fullscreen)

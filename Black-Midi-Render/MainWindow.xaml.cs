@@ -415,7 +415,7 @@ namespace Zenith_MIDI
             // reset threads for rendering
             threadsForRender.Value = settings.threadsForRender;
             Console.WriteLine("--------------------------------------------");
-            Console.WriteLine("当前处理器有" + threadsForRender.Value + "线程，已经设置为渲染线程默认值");
+            Console.WriteLine("当前处理器有" + threadsForRender.Value + "线程，已经设置为过滤器线程默认值");
             Console.WriteLine("您可以在\"渲染\"菜单中进行进一步的更改");
             Console.WriteLine("--------------------------------------------");
         }
@@ -462,7 +462,7 @@ namespace Zenith_MIDI
                         (win.tempoFrameStep * 20 * settings.tempoMultiplier * (win.lastMV > 1 ? win.lastMV : 1)))
                         || nc != 0) && settings.running)
                 {
-                    //SpinWait.SpinUntil(() => lastWinTime != win.midiTime || render != renderer.renderer || !settings.running);
+                    SpinWait.SpinUntil(() => lastWinTime != win.midiTime || render != renderer.renderer || !settings.running);
                     if (!settings.running) break;
                     Note n;
                     double cutoffTime = win.midiTime;
@@ -507,8 +507,8 @@ namespace Zenith_MIDI
                         if (settings.timeBasedNotes) progress = win.midiTime / 1000 / midifile.info.secondsLength;
                         // print progress
                         string currentProgress = (Math.Round(progress * 10000) / 100).ToString();
-                        short indexOfDot = (short)currentProgress.IndexOf('.');
-                        short lenOfProgressString = (short)currentProgress.Length;
+                        int indexOfDot = currentProgress.IndexOf('.');
+                        int lenOfProgressString = currentProgress.Length;
                         if (!currentProgress.Contains("."))
                         {
                             currentProgress += ".00";
@@ -811,16 +811,23 @@ namespace Zenith_MIDI
             settings.audioPath = audioPath.Text;
             settings.ffRenderMask = includeAlpha.IsChecked;
             settings.ffMaskPath = alphaPath.Text;
-            
-            // new thread
-            renderThread = Task.Factory.StartNew(RunRenderWindow);
+            // write info
             Console.WriteLine("线程数量: " + settings.threadsForRender);
             // set encoder
             settings.encoder = (string)((ComboBoxItem)encoderSelect.SelectedItem).Content;
             Console.WriteLine("编码器: " + settings.encoder);
             // set yuv coding
             settings.yuvcode = (string)((ComboBoxItem)yuvSelect.SelectedItem).Content;
+            // encoder checking
+            if ((settings.encoder != "libxvid") && (settings.yuvcode == "444p"))
+            {
+                MessageBox.Show("YUV 444p is only available when 'libxvid' encoder is chosen. \nYUV 444P参数仅在使用XVID编码器时可用." +
+                    "\nPlease reselect encoder and yuv method. \n请重新选择编码器和YUV方法.");
+                return;
+            }
             Console.WriteLine("YUV 编码: " + settings.yuvcode);
+            // new thread
+            renderThread = Task.Factory.StartNew(RunRenderWindow);
 
             Resources["notPreviewing"] = false;
             Resources["notRendering"] = false;
@@ -828,8 +835,10 @@ namespace Zenith_MIDI
 
         private void BrowseVideoSaveButton_Click(object sender, RoutedEventArgs e)
         {
-            var save = new SaveFileDialog();
-            save.OverwritePrompt = true;
+            var save = new SaveFileDialog
+            {
+                OverwritePrompt = true
+            };
             settings.encoder = (string)((ComboBoxItem)encoderSelect.SelectedItem).Content;
             if (settings.encoder == "png") save.Filter = "Video (*.avi)|*.avi";
             else save.Filter = "Video (*.mp4)|*.mp4";
@@ -854,9 +863,11 @@ namespace Zenith_MIDI
 
         private void BrowseAlphaButton_Click(object sender, RoutedEventArgs e)
         {
-            var save = new SaveFileDialog();
-            save.OverwritePrompt = true;
-            save.Filter = "Video (*.mp4)|*.mp4";
+            var save = new SaveFileDialog
+            {
+                OverwritePrompt = true,
+                Filter = "Video (*.mp4)|*.mp4"
+            };
             if ((bool)save.ShowDialog())
             {
                 alphaPath.Text = save.FileName;
@@ -930,8 +941,84 @@ namespace Zenith_MIDI
                     viewWidth.Value = 15360;
                     viewHeight.Value = 8640;
                     break;
+                case "32k":
+                    viewWidth.Value = 30720;
+                    viewHeight.Value = 17280;
+                    break;
+                case "64k":
+                    viewWidth.Value = 61440;
+                    viewHeight.Value = 34560;
+                    break;
+                case "128k":
+                    viewWidth.Value = 122880;
+                    viewHeight.Value = 69120;
+                    break;
+                case "256k":
+                    viewWidth.Value = 245760;
+                    viewHeight.Value = 138240;
+                    break;
+                case "512k":
+                    viewWidth.Value = 491520;
+                    viewHeight.Value = 276480;
+                    break;
+                case "1m":
+                    viewWidth.Value = 983040;
+                    viewHeight.Value = 552960;
+                    break;
+                case "2m":
+                    viewWidth.Value = 1966080;
+                    viewHeight.Value = 1105920;
+                    break;
+                case "4m":
+                    viewWidth.Value = 3932160;
+                    viewHeight.Value = 2211840;
+                    break;
+                case "8m":
+                    viewWidth.Value = 7864320;
+                    viewHeight.Value = 4423680;
+                    break;
+                case "16m":
+                    viewWidth.Value = 15728640;
+                    viewHeight.Value = 8847360;
+                    break;
+                case "32m":
+                    viewWidth.Value = 31457280;
+                    viewHeight.Value = 17694720;
+                    break;
+                case "64m":
+                    viewWidth.Value = 62914560;
+                    viewHeight.Value = 35389440;
+                    break;
+                case "128m":
+                    viewWidth.Value = 125829120;
+                    viewHeight.Value = 70778880;
+                    break;
+                case "256m":
+                    viewWidth.Value = 251658240;
+                    viewHeight.Value = 141557760;
+                    break;
+                case "512m":
+                    viewWidth.Value = 503316480;
+                    viewHeight.Value = 283115520;
+                    break;
+                case "1g":
+                    viewWidth.Value = 1005532960;
+                    viewHeight.Value = 566231040;
+                    break;
+                case "2g":
+                    viewWidth.Value = 2013265920;
+                    viewHeight.Value = 1132462080;
+                    break;
+                case "Maximum":
+                    viewWidth.Value = int.MaxValue;
+                    viewHeight.Value = int.MaxValue;
+                    break;
                 default:
                     break;
+            }
+            if (preset.Contains("m") || preset.Contains("g") || (preset.Contains('k') && preset.Length >= 4))
+            {
+                MessageBox.Show("Too high resolution might make the renderer work really slowly!\n过高的分辨率会让渲染器工作极其缓慢！", "Warning | 警告");
             }
         }
 
@@ -970,9 +1057,9 @@ namespace Zenith_MIDI
                 settings.playbackEnabled = true;
                 try
                 {
-                    Console.WriteLine("Loading KDMAPI...");
+                    Console.WriteLine("正在加载 KDMAPI...");
                     KDMAPI.InitializeKDMAPIStream();
-                    Console.WriteLine("Loaded!");
+                    Console.WriteLine("已加载！");
                 }
                 catch { }
             }
@@ -983,8 +1070,9 @@ namespace Zenith_MIDI
                 settings.playbackEnabled = false;
                 try
                 {
-                    Console.WriteLine("Unloading KDMAPI");
+                    Console.WriteLine("正在卸载 KDMAPI...");
                     KDMAPI.TerminateKDMAPIStream();
+                    Console.WriteLine("已卸载！");
                 }
                 catch { }
             }
@@ -1058,6 +1146,7 @@ namespace Zenith_MIDI
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)
         {
+            metaSettings.SaveConfig();
             Close();
         }
 
@@ -1084,6 +1173,7 @@ namespace Zenith_MIDI
         // set changing of threads value
         private void threadsValueChanged(object sender, RoutedPropertyChangedEventArgs<decimal> e)
         {
+            if (settings == null) return;
             settings.threadsForRender = (int)threadsForRender.Value;
         }
     }

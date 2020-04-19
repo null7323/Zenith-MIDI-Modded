@@ -205,11 +205,11 @@
                                                 <StackPanel>
                                                     <DockPanel LastChildFill="False" Margin="0,0,0,5" HorizontalAlignment="Left">
                                                         <Label Content="{DynamicResource width}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
-                                                        <ui:NumberSelect x:Name="viewWidth" Maximum="15360" Minimum="1" Width="118" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}"  DockPanel.Dock="Left" Margin="10,0,0,0"  />
+                                                        <ui:NumberSelect x:Name="viewWidth" Maximum="2147483647" Minimum="1" Width="138" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}"  DockPanel.Dock="Left" Margin="10,0,0,0"  />
                                                     </DockPanel>
                                                     <DockPanel LastChildFill="False" HorizontalAlignment="Left">
                                                         <Label Content="{DynamicResource height}" HorizontalAlignment="Left" DockPanel.Dock="Left" Margin="0,0,0,0"/>
-                                                        <ui:NumberSelect x:Name="viewHeight" Maximum="8640" Minimum="1" Width="118" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}"  DockPanel.Dock="Left" Margin="5,0,0,0"  />
+                                                        <ui:NumberSelect x:Name="viewHeight" Maximum="2147483647" Minimum="1" Width="138" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}"  DockPanel.Dock="Left" Margin="5,0,0,0"  />
                                                     </DockPanel>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1">
@@ -223,6 +223,24 @@
                                                             <ComboBoxItem Content="5k"/>
                                                             <ComboBoxItem Content="8k"/>
                                                             <ComboBoxItem Content="16k"/>
+                                                            <ComboBoxItem Content="32k"/>
+                                                            <ComboBoxItem Content="64k"/>
+                                                            <ComboBoxItem Content="128k"/>
+                                                            <ComboBoxItem Content="256k"/>
+                                                            <ComboBoxItem Content="512k"/>
+                                                            <ComboBoxItem Content="1m"/>
+                                                            <ComboBoxItem Content="2m"/>
+                                                            <ComboBoxItem Content="4m"/>
+                                                            <ComboBoxItem Content="8m"/>
+                                                            <ComboBoxItem Content="16m"/>
+                                                            <ComboBoxItem Content="32m"/>
+                                                            <ComboBoxItem Content="64m"/>
+                                                            <ComboBoxItem Content="128m"/>
+                                                            <ComboBoxItem Content="256m"/>
+                                                            <ComboBoxItem Content="512m"/>
+                                                            <ComboBoxItem Content="1g"/>
+                                                            <ComboBoxItem Content="2g"/>
+                                                            <ComboBoxItem Content="Maximum"/>
                                                         </ComboBox>
                                                     </DockPanel>
                                                     <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Left" LastChildFill="False" Margin="0,5" VerticalAlignment="Top">
@@ -388,7 +406,7 @@
                                 <ui:NumberSelect x:Name="secondsDelay" Value="0" Maximum="10" Minimum="0" HorizontalAlignment="Left" Width="82"  IsEnabled="{Binding IsEnabled, ElementName=notRendering}" DockPanel.Dock="Left" />
                             </DockPanel>
                             <DockPanel LastChildFill="False" Margin="0,10,0,0" Height="31">
-                                <Label Content="{DynamicResource threadsUsing}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
+                                <Label Content="{DynamicResource filterThreadsUsing}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
                                 <ui:NumberSelect x:Name="threadsForRender" Value="8" Maximum="128" Minimum="1" HorizontalAlignment="Left" Width="82" IsEnabled="{Binding IsEnabled, ElementName=threadsForRender}" DockPanel.Dock="Left" ValueChanged="threadsValueChanged"/>
                             </DockPanel>
                             <!--Combo Box: Encoder-->

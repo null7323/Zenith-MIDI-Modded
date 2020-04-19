@@ -219,7 +219,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
-    <Content Include="icon_blue.ico" />
     <Resource Include="icon.png" />
   </ItemGroup>
   <ItemGroup>

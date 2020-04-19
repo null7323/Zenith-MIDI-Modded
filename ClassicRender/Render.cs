@@ -21,6 +21,7 @@ namespace ClassicRender
     public class Render : IPluginRender
     {
         #region PreviewConvert
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
             using (MemoryStream memory = new MemoryStream())
@@ -49,7 +50,7 @@ namespace ClassicRender
         #endregion
 
         #region Shaders
-        string noteShaderVert = @"#version 330 compatibility
+        const string noteShaderVert = @"#version 330 compatibility
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec4 glColor;
@@ -63,7 +64,7 @@ void main()
     color = vec4(glColor.xyz + attrib.x, glColor.w);
 }
 ";
-        string noteShaderFrag = @"#version 330 compatibility
+        const string noteShaderFrag = @"#version 330 compatibility
  
 in vec4 color;
  
@@ -101,7 +102,8 @@ void main()
         int colorBufferID;
         int attribBufferID;
 
-        int quadBufferLength = 2048 * 64;
+        // int quadBufferLength = 2048 * 64;
+        const int quadBufferLength = 2 << 17;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         double[] quadAttribbuff;
@@ -145,13 +147,12 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, noteShaderVert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, noteShaderFrag);
@@ -165,9 +166,9 @@ void main()
             GL.AttachShader(noteShader, _vertexObj);
             GL.LinkProgram(noteShader);
 
-            quadVertexbuff = new double[quadBufferLength * 8];
-            quadColorbuff = new float[quadBufferLength * 16];
-            quadAttribbuff = new double[quadBufferLength * 8];
+            quadVertexbuff = new double[quadBufferLength << 3];
+            quadColorbuff = new float[quadBufferLength << 4];
+            quadAttribbuff = new double[quadBufferLength << 3];
 
             GL.GenBuffers(1, out vertexBufferID);
             GL.GenBuffers(1, out colorBufferID);
@@ -280,7 +281,7 @@ void main()
 
             double deltaTimeOnScreen = NoteScreenTime;
             double pianoHeight = settings.pianoHeight;
-            bool sameWidth = settings.sameWidthNotes;
+            // bool sameWidth = settings.sameWidthNotes;
             for (int i = 0; i < 514; i++) keyColors[i] = Color4.Transparent;
             for (int i = 0; i < 256; i++) keyPressed[i] = false;
             double wdth;
@@ -320,13 +321,28 @@ void main()
                         wdth = 0.6f / (knmln - knmfn + 1);
                         int bknum = keynum[i] % 5;
                         double offset = wdth / 2;
-                        if (bknum == 0 || bknum == 2)
+                        /*if (bknum == 0 || bknum == 2)
                         {
                             offset *= 1.3;
                         }
                         else if (bknum == 1 || bknum == 4)
                         {
                             offset *= 0.7;
+                        }*/
+                        switch (bknum)
+                        {
+                            case 0:
+                                offset *= 1.3;
+                                break;
+                            case 2:
+                                offset *= 1.3;
+                                break;
+                            case 1:
+                                offset *= 0.7;
+                                break;
+                            case 4:
+                                offset *= 0.7;
+                                break;
                         }
                         x1array[i] = (float)(keynum[_i] - knmfn) / (knmln - knmfn + 1) - offset;
                         wdtharray[i] = wdth;
@@ -463,7 +479,7 @@ void main()
                                 quadVertexbuff[pos++] = xx1;
                                 quadVertexbuff[pos++] = yy2;
 
-                                pos = quadBufferPos * 16;
+                                pos = quadBufferPos << 4;
                                 r = coll.R;
                                 g = coll.G;
                                 b = coll.B;
@@ -715,7 +731,7 @@ void main()
                 else continue;
 
                 var coll = keyColors[n * 2];
-                var colr = keyColors[(n * 2) + 1];
+                var colr = keyColors[n * 2 + 1];
                 var origcol = origColors[n];
                 float blendfac = coll.A;
                 float revblendfac = 1 - blendfac;
@@ -816,7 +832,7 @@ void main()
                 quadVertexbuff[pos++] = xx1;
                 quadVertexbuff[pos++] = ys1;
 
-                pos = quadBufferPos * 8;
+                pos = quadBufferPos << 3;
                 quadAttribbuff[pos++] = 0.0;
                 quadAttribbuff[pos++] = 0;
                 quadAttribbuff[pos++] = -0.2;
@@ -1014,6 +1030,7 @@ void main()
             quadBufferPos = 0;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         bool isBlackNote(int n)
         {
             n %= 12;

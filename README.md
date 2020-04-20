@@ -30,7 +30,7 @@ This version may not as stable as original Zenith
 
 Original Author: Arduano | 原作者 Arduano
 
-Modified by: qishipai and me | Qishipai和我进行了修改
+Modified by: Qishipai, SignedZ and me | Qishipai, SignedZ和我进行了修改
 
 #### License | 许可
 

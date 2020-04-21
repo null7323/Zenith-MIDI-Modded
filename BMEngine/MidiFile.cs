@@ -228,7 +228,7 @@ namespace ZenithEngine
                 long smallest = 0;
                 bool first = true;
                 int id = 0;
-                for (int i = 0; i < iters.Length; i++)
+                for (int i = 0; i < iters.Length; ++i)
                 {
                     if (!unended[i]) continue;
                     if (first)

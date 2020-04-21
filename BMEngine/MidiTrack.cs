@@ -122,14 +122,15 @@ namespace ZenithEngine
                     trkColors[i].right = zeroTickTrkColors[i].right;
                 }
             }*/
-            int[] indexes = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-            foreach (var i in indexes)
+            int _Index = 0;
+            foreach (var i in trkColors)
             {
-                if (zeroTickTrkColors[i] != null)
+                if (zeroTickTrkColors[_Index] != null)
                 {
-                    trkColors[i].left = zeroTickTrkColors[i].left;
-                    trkColors[i].right = zeroTickTrkColors[i].right;
+                    i.left = zeroTickTrkColors[_Index].left;
+                    i.right = zeroTickTrkColors[_Index].right;
                 }
+                ++_Index;
             }
         }
 

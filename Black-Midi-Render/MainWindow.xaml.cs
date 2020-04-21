@@ -281,7 +281,8 @@ namespace Zenith_MIDI
 
             InitializeComponent();
 
-            windowTabs.VersionName = metaSettings.VersionName;
+            // windowTabs.VersionName = /*metaSettings.VersionName*/;
+            windowTabs.VersionName = "2.0.6M4";
 
             SourceInitialized += (s, e) =>
             {
@@ -418,6 +419,9 @@ namespace Zenith_MIDI
             Console.WriteLine("当前处理器有" + threadsForRender.Value + "线程，已经设置为过滤器线程默认值");
             Console.WriteLine("您可以在\"渲染\"菜单中进行进一步的更改");
             Console.WriteLine("--------------------------------------------");
+            // set width and height
+            previewWidthSelect.Value = settings.preview_width;
+            previewHeightSelect.Value = settings.preview_height;
         }
 
         Task renderThread = null;
@@ -741,6 +745,8 @@ namespace Zenith_MIDI
             settings.ffRender = false;
             settings.Paused = false;
             settings.renderSecondsDelay = 0;
+            settings.preview_width = (int)previewWidthSelect.Value;
+            settings.preview_height = (int)previewHeightSelect.Value;
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.RunContinuationsAsynchronously | TaskCreationOptions.LongRunning);
             Resources["notPreviewing"] = false;
         }
@@ -826,6 +832,9 @@ namespace Zenith_MIDI
                 return;
             }
             Console.WriteLine("YUV 编码: " + settings.yuvcode);
+            // resolution
+            settings.preview_width = (int)previewWidthSelect.Value;
+            settings.preview_height = (int)previewHeightSelect.Value;
             // new thread
             renderThread = Task.Factory.StartNew(RunRenderWindow);
 
@@ -1163,6 +1172,13 @@ namespace Zenith_MIDI
         private void tempoMultSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings != null) settings.tempoMultiplier = tempoMultSlider.Value;
+        }
+
+        // set value of skipping
+        private void Skip_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (settings == null) return;
+            settings.skip = (int)skipValue.Value;
         }
 
         private void updateDownloaded_MouseDown(object sender, MouseButtonEventArgs e)

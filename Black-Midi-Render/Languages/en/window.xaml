@@ -27,10 +27,15 @@
     <system:String x:Key="presets">Presets</system:String>
     <system:String x:Key="zenithRenderWarning">Warning: Zenith Preview renders in the resolution above, then downscales to the window size</system:String>
     <system:String x:Key="superRes">SSAA</system:String>
+    <!--preview-resolution-->
+    <system:String x:Key="previewWidthLabel">Preview Width</system:String>
+    <system:String x:Key="previewHeightLabel">Preview Height</system:String>
     <system:String x:Key="superResWarning">Increasing SSAA can greatly increase the smoothness of the pixels but takes much more performance</system:String>
     <system:String x:Key="language">Language</system:String>
     <system:String x:Key="renderResolution">Render Resolution</system:String>
     <system:String x:Key="previewOptions">Preview Options</system:String>
+    <!--Skip-->
+    <system:String x:Key="skipLabel">Skip</system:String>
     <system:String x:Key="renderOptions">Render Options</system:String>
     
     <!--Plugins Page-->

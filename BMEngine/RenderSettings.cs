@@ -88,5 +88,10 @@ namespace ZenithEngine
         public string encoder = "libx264";
         // yuv
         public string yuvcode = "420p";
+        // skip
+        public int skip = 5000;
+        // width, height
+        public int preview_width = 1920;
+        public int preview_height = 1080;
     }
 }

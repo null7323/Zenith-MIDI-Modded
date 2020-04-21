@@ -199,10 +199,11 @@
                                             <Label FontSize="16" HorizontalAlignment="Center" Content="{DynamicResource renderResolution}"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="0*"/>
                                                     <ColumnDefinition/>
                                                     <ColumnDefinition/>
                                                 </Grid.ColumnDefinitions>
-                                                <StackPanel>
+                                                <StackPanel Grid.ColumnSpan="2">
                                                     <DockPanel LastChildFill="False" Margin="0,0,0,5" HorizontalAlignment="Left">
                                                         <Label Content="{DynamicResource width}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
                                                         <ui:NumberSelect x:Name="viewWidth" Maximum="2147483647" Minimum="1" Width="138" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}"  DockPanel.Dock="Left" Margin="10,0,0,0"  />
@@ -211,8 +212,12 @@
                                                         <Label Content="{DynamicResource height}" HorizontalAlignment="Left" DockPanel.Dock="Left" Margin="0,0,0,0"/>
                                                         <ui:NumberSelect x:Name="viewHeight" Maximum="2147483647" Minimum="1" Width="138" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}"  DockPanel.Dock="Left" Margin="5,0,0,0"  />
                                                     </DockPanel>
+                                                    <DockPanel LastChildFill="False" VerticalAlignment="Top" Margin="0,5,0,0">
+                                                        <Label Content="{DynamicResource previewWidthLabel}" VerticalAlignment="Top" Margin="0,5,0,0" HorizontalAlignment="Left"/>
+                                                        <ui:NumberSelect x:Name="previewWidthSelect" VerticalAlignment="Top" Margin="10,5,0,0" HorizontalAlignment="Left" Minimum="1280" Maximum="15360" Width="88" Value="1920" DockPanel.Dock="Left" IsEnabled="{Binding IsEnabled, ElementName=previewWidthSelect}"/>
+                                                    </DockPanel>
                                                 </StackPanel>
-                                                <StackPanel Grid.Column="1">
+                                                <StackPanel Grid.Column="2">
                                                     <DockPanel LastChildFill="False" Margin="0,0,0,5" HorizontalAlignment="Left">
                                                         <Label Content="{DynamicResource presets}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                                                         <ComboBox IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}" x:Name="resolutionPreset" Margin="10,0,0,0" Width="110" SelectionChanged="ResolutionPreset_SelectionChanged">
@@ -247,6 +252,10 @@
                                                         <Label Content="{DynamicResource superRes}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
                                                         <ui:NumberSelect DockPanel.Dock="Left" x:Name="SSAAFactor" Value="1" Maximum="4" Minimum="1" HorizontalAlignment="Left" Width="118" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}" Margin="20,0,0,0"  />
                                                     </DockPanel>
+                                                    <DockPanel>
+                                                        <Label Content="{DynamicResource previewHeightLabel}" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left"/>
+                                                        <ui:NumberSelect x:Name="previewHeightSelect" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left" Minimum="720" Maximum="8640" Width="88" Value="1280" DockPanel.Dock="Left" IsEnabled="{Binding IsEnabled, ElementName=previewHeightSelect}"/>
+                                                    </DockPanel>
                                                 </StackPanel>
                                             </Grid>
                                         </StackPanel>
@@ -271,8 +280,8 @@
                                         </StackPanel>
                                     </Border>
                                 </Grid>
-                                <DockPanel LastChildFill="False" VerticalAlignment="Top">
-                                    <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Text="{DynamicResource zenithRenderWarning}" VerticalAlignment="Top" Margin="5,5,0,5" HorizontalAlignment="Left"/>
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Text="{DynamicResource zenithRenderWarning}" VerticalAlignment="Top" Margin="5,10,0,5" HorizontalAlignment="Left"/>
                                     <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Text="{DynamicResource superResWarning}" VerticalAlignment="Top" Margin="5,5,0,5" HorizontalAlignment="Left"/>
                                 </DockPanel>
                                 <DockPanel LastChildFill="True" Height="26" Margin="0,10,0,20" VerticalAlignment="Top">
@@ -284,6 +293,10 @@
                                 <DockPanel HorizontalAlignment="Center" Height="30" LastChildFill="False" Margin="0,0,0,10" VerticalAlignment="Top">
                                     <Label Content="{DynamicResource tempo}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
                                     <ui:ValueSlider ValueChanged="tempoMultSlider_ValueChanged" Name="tempoMultSlider" Width="396" Minimum="-4" Maximum="6" TrueMin="0.01" TrueMax="1000" DecimalPoints="2" Value="1" Margin="0,0,0,4"/>
+                                </DockPanel>
+                                <DockPanel HorizontalAlignment="Center" LastChildFill="False" VerticalAlignment="Top" Height="30">
+                                    <Label Content="{DynamicResource skipLabel}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
+                                    <ui:ValueSlider  ValueChanged="Skip_ValueChanged" Name="skipValue" Width="396" Minimum="100" Maximum="100000" TrueMin="100" TrueMax="100000" DecimalPoints="0" Value="5000" Margin="0,0,0,5"/>
                                 </DockPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -443,7 +456,7 @@
                             <TextBox DockPanel.Dock="Bottom" x:Name="creditText" Text="Arduano" AcceptsReturn="True" IsReadOnly="True" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" Width="281" VerticalAlignment="Bottom"/>
                             <Label Content="{DynamicResource ifUploading}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Bottom"/>
                         </DockPanel>
-                        
+
                     </Grid>
                 </TabItem>
             </local:CustomTabs>

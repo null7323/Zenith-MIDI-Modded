@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.IO.Pipes;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,8 +12,6 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
-using System.Drawing.Drawing2D;
-using System.Drawing.Text;
 using System.Text.RegularExpressions;
 using System.Drawing.Imaging;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
@@ -403,8 +396,10 @@ void main()
         // GLTextEngine textEngine;
         public RenderWindow(CurrentRendererPointer renderer, MidiFile midi, RenderSettings settings) : base(16, 9, new GraphicsMode(new ColorFormat(8, 8, 8, 8)), "Render", GameWindowFlags.Default, DisplayDevice.Default)
         {
-            Width = (int)(DisplayDevice.Default.Width / 1.5);
-            Height = (int)((double)Width / settings.width * settings.height);
+            // Width = (int)(DisplayDevice.Default.Width / 1.5);
+            // Height = Width / settings.width * settings.height;
+            Width = settings.preview_width;
+            Height = settings.preview_height;
             Location = new Point((DisplayDevice.Default.Width - Width) / 2, (DisplayDevice.Default.Height - Height) / 2);
             //textEngine = new GLTextEngine();
             render = renderer;
@@ -861,9 +856,9 @@ void main()
             if (e.Key == Key.Space && !settings.ffRender) settings.Paused = !settings.Paused;
             if (e.Key == Key.Right && !settings.ffRender)
             {
-                int skip = 5000;
-                if (e.Modifiers == KeyModifiers.Control) skip = 20000;
-                if (e.Modifiers == KeyModifiers.Shift) skip = 60000;
+                int skip = settings.skip;
+                if (e.Modifiers == KeyModifiers.Control) skip += 20000;
+                if (e.Modifiers == KeyModifiers.Shift) skip += 60000;
                 if (settings.timeBasedNotes) midiTime += skip;
                 else
                 {

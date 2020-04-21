@@ -4,7 +4,6 @@
 
 #### New Features | 新特性
 
-- A little bit faster | 比原版稍快，约5%
 - Support more encoders | 支持更多编码器
 - Support parameter '-filter_threads' | 支持-filter threads参数
 - Support more YUV methods | 支持更多YUV方法  
@@ -16,9 +15,7 @@
 
 #### Removed Features | 移除的特性
 
-- Pressing '→' to skip is unavailable now | 按下"→"快进现在不可用
 - 'Draw black notes above' selection of 'PFA+' is removed | PFA+ 绘制黑色音符轮廓的选项被移除
-
 - Downloading new language pack automatically is unavailable | Zenith不会自动下载语言包
 - Checking update and updating automatically is unavailable | Zenith将不再自动更新
 - Zenith won't show the memory info | Zenith不再显示内存信息
@@ -33,7 +30,7 @@ This version may not as stable as original Zenith
 
 Original Author: Arduano | 原作者 Arduano
 
-Modified by: qishipai and me | Qishipai和我进行了修改
+Modified by: Qishipai, SignedZ and me | Qishipai, SignedZ和我进行了修改
 
 #### License | 许可
 

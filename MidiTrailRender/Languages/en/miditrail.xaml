@@ -69,4 +69,6 @@
     <system:String x:Key="reload">Reload</system:String>
     <system:String x:Key="auraStrength">Strength:</system:String>
     <system:String x:Key="openAuraFolder">Open Aura Folder</system:String>
+    <!--Aura Radius-->
+    <system:String x:Key="auraRadius">Radius: </system:String>
 </ResourceDictionary>

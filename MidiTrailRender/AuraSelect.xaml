@@ -27,8 +27,12 @@
             <Button x:Name="reload" Content="{DynamicResource reload}" Margin="0,10,0,0" Height="26" VerticalAlignment="Top" Click="Reload_Click" DockPanel.Dock="Top"/>
             <Button DockPanel.Dock="Bottom" x:Name="openFolder" Content="{DynamicResource openAuraFolder}" Margin="0,5,0,0" Height="26" VerticalAlignment="Top" Click="openFolder_Click"/>
             <DockPanel DockPanel.Dock="Bottom" HorizontalAlignment="Left" LastChildFill="False" Margin="0,0,0,5" VerticalAlignment="Top">
+                <Label Content="{DynamicResource auraRadius}" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Bottom" DockPanel.Dock="Left"/>
+                <ui:NumberSelect x:Name="auraRadiusRatio" Value="1" Maximum="1024" Minimum="1" Margin="5,0,0,2" HorizontalAlignment="Left" Width="77" DockPanel.Dock="Left" ValueChanged="AuraRadius_ValueChanged"/>
+            </DockPanel>
+            <DockPanel DockPanel.Dock="Bottom" HorizontalAlignment="Left" LastChildFill="False" Margin="0,0,0,5" VerticalAlignment="Top">
                 <Label Content="{DynamicResource auraStrength}" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Bottom" DockPanel.Dock="Left"/>
-                <ui:NumberSelect x:Name="auraStrength" Value="1" Maximum="65535" Minimum="1" Margin="5,0,0,2" HorizontalAlignment="Left" Width="77" ValueChanged="AuraStrength_ValueChanged"  DockPanel.Dock="Left"  />
+                <ui:NumberSelect x:Name="auraStrength" Value="1" Maximum="65536" Minimum="1" Margin="5,0,0,2" HorizontalAlignment="Left" Width="77" ValueChanged="AuraStrength_ValueChanged"  DockPanel.Dock="Left"  />
             </DockPanel>
             <ListBox x:Name="imagesList" Margin="0,5" SelectionChanged="ImagesList_SelectionChanged"/>
         </DockPanel>

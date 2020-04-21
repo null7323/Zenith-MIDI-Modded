@@ -52,5 +52,7 @@ namespace MIDITrailRender
         public bool tickBased = true;
         // note width ratio
         public double noteWidthRatio = 1.0;
+        // aura radius ratio
+        public double auraRadiusRatio = 1.0;
     }
 }

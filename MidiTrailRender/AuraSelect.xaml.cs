@@ -170,11 +170,18 @@ namespace MIDITrailRender
             catch { }
         }
 
+        // radius
+        private void AuraRadius_ValueChanged(object sender, RoutedPropertyChangedEventArgs<decimal> e)
+        {
+            if (settings == null) return;
+            settings.auraRadiusRatio = (double)auraRadiusRatio.Value;
+        }
+
         private void AuraEnabled_Checked(object sender, RoutedEventArgs e)
         {
             try
             {
-                settings.auraEnabled = (bool)auraEnabled.IsChecked;
+                settings.auraEnabled = auraEnabled.IsChecked;
             }
             catch { }
         }

@@ -37,7 +37,7 @@ namespace MIDITrailRender
         #endregion
 
         public string Name => "MIDITrail++";
-        public string Description => "Support Stronger Strength of Aura\nModded by TBL";
+        public string Description => "MIDITrail++ Modified Plugin";
         public string LanguageDictName { get; } = "miditrail";
 
         public bool Initialized { get; set; } = false;
@@ -246,7 +246,7 @@ void main()
         int buffer3dbuf;
         int buffer3dbufdepth;
 
-        int[] whiteKeyVert = new int[7 * 3];
+        int[] whiteKeyVert = new int[21];
         int whiteKeyCol;
         int whiteKeyIndx;
         int whiteKeyBlend;
@@ -262,7 +262,7 @@ void main()
         int noteShade;
         // if there's some problems, reset it
         // readonly int noteBuffLen = 2048 * 256;
-        readonly int noteBuffLen = 4096;
+        int noteBuffLen = 4096;
 
         double[] noteVertBuff;
         float[] noteColBuff;
@@ -288,6 +288,8 @@ void main()
 
         // set note ratio
         double noteWidthRatio;
+        // set aura radius ratio
+        double auraRadiusRatio;
 
         void loadImage(Bitmap image, int texID)
         {
@@ -315,7 +317,7 @@ void main()
             GL.DeleteTexture(buffer3dtex);
             GL.DeleteRenderbuffer(buffer3dbufdepth);
 
-            GL.DeleteBuffers(7 * 3, whiteKeyVert);
+            GL.DeleteBuffers(21, whiteKeyVert);
             GL.DeleteBuffers(11, new int[] {
                 whiteKeyCol, blackKeyVert, blackKeyCol,
                 whiteKeyIndx, blackKeyIndx, whiteKeyBlend, blackKeyBlend,
@@ -352,10 +354,23 @@ void main()
             for (int i = 0; i < blackKeys.Length; i++) blackKeys[i] = isBlackNote(i);
             int b = 0;
             int w = 0;
-            for (int i = 0; i < keynum.Length; i++)
+            /*for (int i = 0; i < keynum.Length; ++i)
             {
                 if (blackKeys[i]) keynum[i] = b++;
                 else keynum[i] = w++;
+            }*/
+            int _Index = 0;
+            foreach (var i in blackKeys)
+            {
+                if (i)
+                {
+                    keynum[_Index] = b++;
+                }
+                else
+                {
+                    keynum[_Index] = w++;
+                }
+                ++_Index;
             }
         }
 
@@ -411,6 +426,7 @@ void main()
             circleUV = GL.GenBuffer();
             circleIndx = GL.GenBuffer();
 
+            
             // noteVertBuff = new double[noteBuffLen * 4 * 3];
             noteVertBuff = new double[(noteBuffLen << 2) * 3];
             // noteColBuff = new float[noteBuffLen * 4 * 4];
@@ -442,7 +458,7 @@ void main()
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, circleIndx);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
-                (IntPtr)(circleIndxBuff.Length * 4),
+                (IntPtr)(circleIndxBuff.Length << 2),
                 circleIndxBuff,
                 BufferUsageHint.StaticDraw);
 
@@ -648,19 +664,19 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, whiteKeyCol);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(cols.Length * 4),
+                (IntPtr)(cols.Length << 2),
                 cols,
                 BufferUsageHint.StaticDraw);
             GL.BindBuffer(BufferTarget.ArrayBuffer, whiteKeyBlend);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(blend.Length * 4),
+                (IntPtr)(blend.Length << 2),
                 blend,
                 BufferUsageHint.StaticDraw);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, whiteKeyIndx);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
-                (IntPtr)(indexes.Length * 4),
+                (IntPtr)(indexes.Length << 2),
                 indexes,
                 BufferUsageHint.StaticDraw);
 
@@ -680,7 +696,7 @@ void main()
                 GL.BindBuffer(BufferTarget.ArrayBuffer, whiteKeyVert[i]);
                 GL.BufferData(
                     BufferTarget.ArrayBuffer,
-                    (IntPtr)(verts.Length * 8),
+                    (IntPtr)(verts.Length << 3),
                     verts,
                     BufferUsageHint.StaticDraw);
             }
@@ -935,6 +951,8 @@ void main()
             fov /= 1;
             // get note width ratio
             noteWidthRatio = settings.noteWidthRatio;
+            // get aura radius ratio
+            auraRadiusRatio = settings.auraRadiusRatio;
             for (int i = 0; i < 514; i++) keyColors[i] = Color4.Transparent;
             for (int i = 0; i < 256; i++) auraSize[i] = 0;
             for (int i = 0; i < keyPressFactor.Length; i++) keyPressFactor[i] = Math.Max(keyPressFactor[i] / 1.05 - noteUpSpeed, 0);
@@ -1122,7 +1140,7 @@ void main()
                             noteVertBuff[pos++] = -wdthd;
                             noteVertBuff[pos++] = y2;
 
-                            pos = noteBuffPos * 16;
+                            pos = noteBuffPos << 4;
                             noteColBuff[pos++] = r;
                             noteColBuff[pos++] = g;
                             noteColBuff[pos++] = b;
@@ -1140,7 +1158,7 @@ void main()
                             noteColBuff[pos++] = b2;
                             noteColBuff[pos++] = a2;
 
-                            pos = noteBuffPos * 4;
+                            pos = noteBuffPos << 2;
                             noteShadeBuff[pos++] = shade;
                             noteShadeBuff[pos++] = shade;
                             noteShadeBuff[pos++] = shade;
@@ -1218,7 +1236,7 @@ void main()
                             noteVertBuff[pos++] = -wdthd;
                             noteVertBuff[pos++] = y2;
 
-                            pos = noteBuffPos * 16;
+                            pos = noteBuffPos << 4;
                             noteColBuff[pos++] = r;
                             noteColBuff[pos++] = g;
                             noteColBuff[pos++] = b;
@@ -1236,7 +1254,7 @@ void main()
                             noteColBuff[pos++] = b2;
                             noteColBuff[pos++] = a2;
 
-                            pos = noteBuffPos * 4;
+                            pos = noteBuffPos << 2;
                             noteShadeBuff[pos++] = shade;
                             noteShadeBuff[pos++] = shade;
                             noteShadeBuff[pos++] = shade;
@@ -1431,7 +1449,11 @@ void main()
                                     factor = 0.5;
                                 }
 
-                                if (auraSize[k] < factor + factor2) auraSize[k] = factor + factor2;
+                                if (auraSize[k] < factor + factor2)
+                                {
+                                    if (auraRadiusRatio != 1) auraSize[k] = (factor + factor2) * (auraRadiusRatio / 15 + 1);
+                                    else auraSize[k] = factor + factor2;
+                                }
 
                                 if (changeTint)
                                     shade = (float)(factor * 0.7);
@@ -1591,7 +1613,9 @@ void main()
                 x1d += (1 - noteWidthRatio) * 0.0045;
                 // end
                 x2d = x1d + wdthd;
+                // multiply: apply aura radius ratio
                 double size = circleRadius * 12 * auraSize[n];
+                
                 if (!blackKeys[n])
                 {
                     // y2 = 0;
@@ -1686,7 +1710,7 @@ void main()
                 circleVertBuff[pos++] = y1;
                 circleVertBuff[pos++] = 0;
 
-                pos = circleBuffPos * 16;
+                pos = circleBuffPos << 4;
                 circleColorBuff[pos++] = r;
                 circleColorBuff[pos++] = g;
                 circleColorBuff[pos++] = b;
@@ -1719,14 +1743,14 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, circleVert);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(circleVertBuff.Length * 8),
+                (IntPtr)(circleVertBuff.Length << 3),
                 circleVertBuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Double, false, 24, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, circleColor);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(circleColorBuff.Length * 4),
+                (IntPtr)(circleColorBuff.Length << 2),
                 circleColorBuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 16, 0);
@@ -1739,7 +1763,7 @@ void main()
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, circleIndx);
             GL.IndexPointer(IndexPointerType.Int, 1, 0);
-            GL.DrawElements(PrimitiveType.Quads, circleBuffPos * 4, DrawElementsType.UnsignedInt, IntPtr.Zero);
+            GL.DrawElements(PrimitiveType.Quads, circleBuffPos << 2, DrawElementsType.UnsignedInt, IntPtr.Zero);
 
             GL.BindTexture(TextureTarget.Texture2D, 0);
             #endregion

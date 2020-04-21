@@ -1448,13 +1448,7 @@ void main()
                                 {
                                     factor = 0.5;
                                 }
-
-                                if (auraSize[k] < factor + factor2)
-                                {
-                                    if (auraRadiusRatio != 1) auraSize[k] = (factor + factor2) * (auraRadiusRatio / 15 + 1);
-                                    else auraSize[k] = factor + factor2;
-                                }
-
+                                auraSize[k] = factor + factor2;
                                 if (changeTint)
                                     shade = (float)(factor * 0.7);
                                 if (changeSize)
@@ -1487,7 +1481,7 @@ void main()
                             noteVertBuff[pos++] = 0;
                             noteVertBuff[pos++] = y2;
 
-                            pos = noteBuffPos * 16;
+                            pos = noteBuffPos << 4;
                             noteColBuff[pos++] = r;
                             noteColBuff[pos++] = g;
                             noteColBuff[pos++] = b;
@@ -1505,7 +1499,7 @@ void main()
                             noteColBuff[pos++] = b2;
                             noteColBuff[pos++] = a2;
 
-                            pos = noteBuffPos * 4;
+                            pos = noteBuffPos << 2;
                             noteShadeBuff[pos++] = shade;
                             noteShadeBuff[pos++] = shade;
                             noteShadeBuff[pos++] = shade;
@@ -1615,6 +1609,10 @@ void main()
                 x2d = x1d + wdthd;
                 // multiply: apply aura radius ratio
                 double size = circleRadius * 12 * auraSize[n];
+                if (auraRadiusRatio != 1)
+                {
+                    size *= (auraRadiusRatio / 25) + 1;
+                }
                 
                 if (!blackKeys[n])
                 {

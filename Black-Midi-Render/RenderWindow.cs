@@ -15,6 +15,7 @@ using OpenTK.Input;
 using System.Text.RegularExpressions;
 using System.Drawing.Imaging;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
+using System.Collections.Generic;
 
 namespace Zenith_MIDI
 {
@@ -408,6 +409,7 @@ void main()
             lock (render)
             {
                 // render.renderer.Tempo = 60000000.0 / midi.zerothTempo;
+                render.renderer.LastMidiTimePerTick = (double)midi.zerothTempo / midi.division;
                 midiTime = -render.renderer.NoteScreenTime;
                 if (settings.timeBasedNotes) tempoFrameStep = 1000.0 / settings.fps;
                 // else tempoFrameStep = (midi.division / lastTempo) * (1000000 / settings.fps);
@@ -488,7 +490,7 @@ void main()
                 }
                 try
                 {
-                    if (globalPlaybackEvents.ZeroLen) continue;
+                    // if (globalPlaybackEvents.ZeroLen) continue;
                     pe = globalPlaybackEvents.Pop();
                     now = DateTime.Now.Ticks;
                     if (now - 10000000 > frameStartTime)
@@ -514,10 +516,10 @@ void main()
         public double lastMV = 1;
 
         int bgTexID = -1;
-        const long lastBGChangeTime = -1;
+        long lastBGChangeTime = -1;
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            Task.Factory.StartNew(() => PlaybackLoop(), TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
+            Task.Factory.StartNew(() => PlaybackLoop(), TaskCreationOptions.LongRunning);
             SpinWait.SpinUntil(() => playbackLoopStarted);
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -537,7 +539,7 @@ void main()
             {
                 if (!settings.Paused || settings.forceReRender)
                 {
-                    if (settings.lastyBGChangeTime != lastBGChangeTime)
+                    if (settings.lastBGChangeTime != lastBGChangeTime)
                     {
                         if (settings.BGImage == null)
                         {
@@ -547,8 +549,19 @@ void main()
                         else
                         {
                             if (bgTexID == -1) bgTexID = GL.GenTexture();
-                            loadImage(settings.BGImage, bgTexID, false, true);
+                            //loadImage(settings.BGImage, bgTexID, false, true);
+                            try
+                            {
+                                loadImage(new Bitmap(settings.BGImage), bgTexID, false, true);
+                            }
+                            catch
+                            {
+                                MessageBox.Show("Couldn't load image");
+                                if (bgTexID != -1) GL.DeleteTexture(bgTexID);
+                                bgTexID = -1;
+                            }
                         }
+                        lastBGChangeTime = settings.lastBGChangeTime;
                     }
 
                     lock (render)
@@ -576,8 +589,11 @@ void main()
                             if (!render.renderer.Initialized)
                             {
                                 render.renderer.Init();
-                                render.renderer.NoteColors = midi.tracks.Select(t => t.trkColors).ToArray();
-                                render.renderer.ReloadTrackColors();
+                                // render.renderer.NoteColors = midi.tracks.Select(t => t.trkColors).ToArray();
+                                List<NoteColor[]> trkColors = new List<NoteColor[]>();
+                                // render.renderer.ReloadTrackColors();
+                                foreach (var t in midi.tracks) trkColors.Add(t.trkColors);
+                                render.renderer.SetTrackColors(trkColors.ToArray());
                                 if (firstRenderer)
                                 {
                                     firstRenderer = false;
@@ -592,17 +608,19 @@ void main()
                                     }
                                 }
                             }
-                            render.renderer.Tempo = 60000000.0 / lastTempo;
+                            // render.renderer.Tempo = 60000000.0 / lastTempo;
+                            render.renderer.LastMidiTimePerTick = lastTempo / midi.division;
                             lastDeltaTimeOnScreen = render.renderer.NoteScreenTime;
                             if (settings.timeBasedNotes)
-                                SpinWait.SpinUntil(() => midi.currentFlexSyncTime > midiTime + lastDeltaTimeOnScreen + tempoFrameStep * settings.tempoMultiplier || midi.unendedTracks == 0 || !settings.running);
+                                // SpinWait.SpinUntil(() => midi.currentFlexSyncTime > midiTime + lastDeltaTimeOnScreen + tempoFrameStep * settings.tempoMultiplier || midi.unendedTracks == 0 || !settings.running);
+                                SpinWait.SpinUntil(() => (long)((midi.currentSyncTime - midi.lastTempoTick) / midi.tempoTickMultiplier + midi.lastTempoTime) > midiTime + lastDeltaTimeOnScreen + tempoFrameStep || midi.unendedTracks == 0 || !settings.running);
                             else
                                 SpinWait.SpinUntil(() => midi.currentSyncTime > midiTime + lastDeltaTimeOnScreen + tempoFrameStep * settings.tempoMultiplier || midi.unendedTracks == 0 || !settings.running);
                             if (!settings.running) break;
 
                             render.renderer.RenderFrame(globalDisplayNotes, midiTime, finalCompositeBuff.BufferID);
                             lastNC = render.renderer.LastNoteCount;
-                            if (lastNC == 0 && midi.unendedTracks == 0) noNoteFrames++;
+                            if (lastNC == 0 && midi.unendedTracks == 0) ++noNoteFrames;
                             else noNoteFrames = 0;
                         }
                         catch (Exception ex)
@@ -620,7 +638,7 @@ void main()
                         mv = settings.fps / 4;
                 }
                 lastMV = mv;
-                if (!settings.Paused)
+                /*if (!settings.Paused)
                 {
                     lock (globalTempoEvents)
                     {
@@ -640,7 +658,29 @@ void main()
                         }
                     }
                     midiTime += mv * tempoFrameStep * settings.tempoMultiplier;
+                }*/
+                lock (globalTempoEvents)
+                {
+                    while (globalTempoEvents.First != null && midiTime + (tempoFrameStep * mv * settings.tempoMultiplier) > globalTempoEvents.First.pos)
+                    {
+                        var t = globalTempoEvents.Pop();
+                        if (t.tempo == 0)
+                        {
+                            Console.WriteLine("Zero tempo event encountered, ignoring");
+                            continue;
+                        }
+                        var _t = (t.pos - midiTime) / (tempoFrameStep * mv * settings.tempoMultiplier);
+                        mv *= 1 - _t;
+                        if (!settings.timeBasedNotes) tempoFrameStep = (double)midi.division / t.tempo * (1000000.0 / settings.fps);
+                        lastTempo = t.tempo;
+                        midiTime = t.pos;
+                    }
                 }
+                if (!settings.Paused)
+                {
+                    midiTime += mv * tempoFrameStep * settings.tempoMultiplier;
+                }
+                // 我是分割线
                 frameStartTime = DateTime.Now.Ticks;
                 if (settings.timeBasedNotes) microsecondsPerTick = 10000;
                 else microsecondsPerTick = (long)(lastTempo / midi.division * 10);
@@ -657,7 +697,7 @@ void main()
                             {
                                 trkColor.left = c.col1;
                                 trkColor.right = c.col2;
-                                trkColor.isDefault = false;
+                                // trkColor.isDefault = false;
                             }
                             /*
                             for (int i = 0; i < 16; i++)
@@ -671,7 +711,7 @@ void main()
                         {
                             c.track.trkColors[c.channel].left = c.col1;
                             c.track.trkColors[c.channel].right = c.col2;
-                            c.track.trkColors[c.channel].isDefault = false;
+                            // c.track.trkColors[c.channel].isDefault = false;
                         }
                     }
                 }
@@ -779,7 +819,7 @@ void main()
                 watch.Reset();
                 watch.Start();
             }
-            // Console.WriteLine("Left render loop");
+            Console.WriteLine("Left render loop");
             settings.running = false;
             if (settings.ffRender)
             {
@@ -847,7 +887,7 @@ void main()
             render = null;
             // Console.WriteLine("Closing window");
 
-            this.Close();
+            Close();
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -865,9 +905,9 @@ void main()
                     lock (midi)
                     {
                         double timeSkipped = 0;
-                        for (; timeSkipped < skip; midiTime++)
+                        for (; timeSkipped < skip; ++midiTime)
                         {
-                            midi.ParseUpTo(midiTime);
+                            midi.ParseUpTo((long)midiTime);
                             timeSkipped += 1 / midi.tempoTickMultiplier;
                         }
                     }

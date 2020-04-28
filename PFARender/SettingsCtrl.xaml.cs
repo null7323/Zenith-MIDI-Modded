@@ -113,12 +113,12 @@ namespace PFARender
             settings.middleC = middleCSquare.IsChecked;
         }
 
-        /*[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void BlackNotesAbove_Checked(object sender, RoutedEventArgs e)
         {
             if (settings == null) return;
             settings.blackNotesAbove = blackNotesAbove.IsChecked;
-        }*/
+        }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void BarColorHex_TextChanged(object sender, TextChangedEventArgs e)

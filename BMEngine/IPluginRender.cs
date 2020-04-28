@@ -18,8 +18,9 @@ namespace ZenithEngine
         bool ManualNoteDelete { get; }
         double NoteCollectorOffset { get; }
 
-        NoteColor[][] NoteColors { set; }
-        double Tempo { set; }
+        //NoteColor[][] NoteColors { set; }
+        //double Tempo { set; }
+        double LastMidiTimePerTick { get; set; }
         
         MidiInfo CurrentMidi { set; }
 
@@ -31,6 +32,7 @@ namespace ZenithEngine
 
         void Init();
         void RenderFrame(FastList<Note> notes, double midiTime, int finalCompositeBuff);
-        void ReloadTrackColors();
+        // void ReloadTrackColors();
+        void SetTrackColors(NoteColor[][] trkcolors);
     }
 }

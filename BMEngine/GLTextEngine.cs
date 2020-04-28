@@ -185,16 +185,16 @@ void main()
 
         public void Render(string text, Matrix4 transform, Color4 color)
         {
-            //GL.Enable(EnableCap.Blend);
-            //GL.EnableClientState(ArrayCap.VertexArray);
-            //GL.EnableClientState(ArrayCap.ColorArray);
-            //GL.EnableClientState(ArrayCap.TextureCoordArray);
-            //GL.Enable(EnableCap.Texture2D);
+            /*GL.Enable(EnableCap.Blend);
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.EnableClientState(ArrayCap.ColorArray);
+            GL.EnableClientState(ArrayCap.TextureCoordArray);
+            GL.Enable(EnableCap.Texture2D);
 
-            //GL.EnableVertexAttribArray(0);
-            //GL.EnableVertexAttribArray(1);
+            GL.EnableVertexAttribArray(0);
+            GL.EnableVertexAttribArray(1);
 
-            //GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);*/
 
             GL.UseProgram(textShader);
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -269,14 +269,14 @@ void main()
             }
             FlushQuadBuffer(false);
 
-            GL.Disable(EnableCap.Blend);
+            /*GL.Disable(EnableCap.Blend);
             GL.Disable(EnableCap.Texture2D);
             GL.DisableClientState(ArrayCap.VertexArray);
             GL.DisableClientState(ArrayCap.ColorArray);
             GL.DisableClientState(ArrayCap.TextureCoordArray);
 
             GL.DisableVertexAttribArray(0);
-            GL.DisableVertexAttribArray(1);
+            GL.DisableVertexAttribArray(1);*/
         }
 
         public SizeF GetBoundBox(string text)
@@ -290,7 +290,7 @@ void main()
                 if (c == '\n')
                 {
                     curpos.X = 0;
-                    rows++;
+                    ++rows;
                 }
                 if (!Characters.Contains(c)) continue;
                 var chari = Characters.IndexOf(c);
@@ -341,11 +341,18 @@ void main()
             var characters = new List<Bitmap>();
             using (var font = new Font(fontName, fontSize, fontStyle))
             {
-                for (int i = 0; i < Characters.Length; i++)
+                /*for (int i = 0; i < Characters.Length; i++)
                 {
                     var charBmp = GenerateCharacter(font, Characters[i]);
                     charSizes[i] = GetSize(font, Characters[i]);
                     characters.Add(charBmp);
+                }*/
+                int charSizesIndex = 0;
+                foreach (var i in Characters)
+                {
+                    charSizes[charSizesIndex] = GetSize(font, i);
+                    characters.Add(GenerateCharacter(font, i));
+                    ++charSizesIndex;
                 }
                 charSize = new Size(characters.Max(x => x.Width), characters.Max(x => x.Height));
 

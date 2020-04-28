@@ -10,7 +10,7 @@
         mc:Ignorable="d"
         TextOptions.TextFormattingMode="Ideal" 
         TextOptions.TextRenderingMode="Auto" WindowStyle="None"
-        Title="Zenith 2.0.6 (Modified)" Height="600" Width="900" MinWidth="780" MinHeight="550" Closing="Window_Closing"
+        Title="Zenith 2.0.6 Modded" Height="600" Width="900" MinWidth="780" MinHeight="550" Closing="Window_Closing"
         Background="#171717" Name="mainWindow">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="40"/>
@@ -214,7 +214,7 @@
                                                     </DockPanel>
                                                     <DockPanel LastChildFill="False" VerticalAlignment="Top" Margin="0,5,0,0">
                                                         <Label Content="{DynamicResource previewWidthLabel}" VerticalAlignment="Top" Margin="0,5,0,0" HorizontalAlignment="Left"/>
-                                                        <ui:NumberSelect x:Name="previewWidthSelect" VerticalAlignment="Top" Margin="10,5,0,0" HorizontalAlignment="Left" Minimum="1280" Maximum="15360" Width="88" Value="1920" DockPanel.Dock="Left" IsEnabled="{Binding IsEnabled, ElementName=previewWidthSelect}"/>
+                                                        <ui:NumberSelect x:Name="previewWidthSelect" VerticalAlignment="Top" Margin="10,5,0,0" HorizontalAlignment="Left" Minimum="1" Maximum="15360" Width="88" Value="1920" DockPanel.Dock="Left" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}"/>
                                                     </DockPanel>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="2">
@@ -254,7 +254,7 @@
                                                     </DockPanel>
                                                     <DockPanel>
                                                         <Label Content="{DynamicResource previewHeightLabel}" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left"/>
-                                                        <ui:NumberSelect x:Name="previewHeightSelect" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left" Minimum="720" Maximum="8640" Width="88" Value="1280" DockPanel.Dock="Left" IsEnabled="{Binding IsEnabled, ElementName=previewHeightSelect}"/>
+                                                        <ui:NumberSelect x:Name="previewHeightSelect" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left" Minimum="1" Maximum="8640" Width="88" Value="1280" DockPanel.Dock="Left" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}"/>
                                                     </DockPanel>
                                                 </StackPanel>
                                             </Grid>
@@ -276,7 +276,19 @@
                                                     </ComboBox>
                                                 </DockPanel>
                                             </DockPanel>
-                                            <ui:BetterCheckbox Height="26" x:Name="ignoreColorEvents" Text="{DynamicResource ignoreColorEvents}" CheckToggled="IgnoreColorEvents_Checked" HorizontalAlignment="Center"/>
+                                            <DockPanel HorizontalAlignment="Center">
+                                                <Label Content="{DynamicResource noteBufferSize}" HorizontalAlignment="Left" Margin="0,0,0,0"/>
+                                                <ComboBox x:Name="noteBufferSizeComboBox" Width="158" HorizontalAlignment="Center" Margin="10,0,0,0" SelectedIndex="3" SelectionChanged="NoteBufferSize_ValueChanged" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}">
+                                                    <ComboBoxItem Content="{DynamicResource sizeExtremelyLarge}"/>
+                                                    <ComboBoxItem Content="{DynamicResource sizeVeryLarge}"/>
+                                                    <ComboBoxItem Content="{DynamicResource sizeLarge}"/>
+                                                    <ComboBoxItem Content="{DynamicResource sizeStandard}"/>
+                                                    <ComboBoxItem Content="{DynamicResource sizeSmall}"/>
+                                                    <ComboBoxItem Content="{DynamicResource sizeVerySmall}"/>
+                                                    <ComboBoxItem Content="{DynamicResource sizeExtremelySmall}"/>
+                                                </ComboBox>
+                                            </DockPanel>
+                                            <ui:BetterCheckbox Height="26" x:Name="ignoreColorEvents" Text="{DynamicResource ignoreColorEvents}" CheckToggled="IgnoreColorEvents_Checked" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -420,12 +432,12 @@
                             </DockPanel>
                             <DockPanel LastChildFill="False" Margin="0,10,0,0" Height="31">
                                 <Label Content="{DynamicResource filterThreadsUsing}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
-                                <ui:NumberSelect x:Name="threadsForRender" Value="8" Maximum="128" Minimum="1" HorizontalAlignment="Left" Width="82" IsEnabled="{Binding IsEnabled, ElementName=threadsForRender}" DockPanel.Dock="Left" ValueChanged="threadsValueChanged"/>
+                                <ui:NumberSelect x:Name="threadsForRender" Value="8" Maximum="128" Minimum="1" HorizontalAlignment="Left" Width="82" IsEnabled="{DynamicResource notRendering}" DockPanel.Dock="Left" ValueChanged="threadsValueChanged"/>
                             </DockPanel>
                             <!--Combo Box: Encoder-->
                             <DockPanel LastChildFill="False" Margin="0,10,0,0" Height="31">
                                 <Label Content="{DynamicResource encoders}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
-                                <ComboBox x:Name="encoderSelect" DockPanel.Dock="Left" IsEnabled="{Binding IsEnabled}" Width="122" SelectedIndex="0" HorizontalAlignment="Left" Margin="10,0,0,0">
+                                <ComboBox x:Name="encoderSelect" DockPanel.Dock="Left" IsEnabled="{DynamicResource notRendering}" Width="122" SelectedIndex="0" HorizontalAlignment="Left" Margin="10,0,0,0">
                                     <ComboBoxItem Content="libx264"/>
                                     <ComboBoxItem Content="libx264rgb"/>
                                     <ComboBoxItem Content="h264_nvenc"/>
@@ -437,7 +449,7 @@
                             </DockPanel>
                             <!--Combo Box: YUV-->
                             <DockPanel LastChildFill="False" Margin="0,10,0,0" Height="31">
-                                <Label Content="{DynamicResource yuv}" HorizontalAlignment="Left" DockPanel.Dock="Left"/>
+                                <Label Content="{DynamicResource yuv}" HorizontalAlignment="Left" DockPanel.Dock="Left" IsEnabled="{DynamicResource notRendering}"/>
                                 <ComboBox x:Name="yuvSelect" DockPanel.Dock="Left" HorizontalAlignment="Left" Margin="10,0,0,0" Width="122" SelectedIndex="1">
                                     <ComboBoxItem Content="411p"/>
                                     <ComboBoxItem Content="420p"/>
@@ -453,7 +465,7 @@
                             </DockPanel>
                         </StackPanel>
                         <DockPanel Margin="10">
-                            <TextBox DockPanel.Dock="Bottom" x:Name="creditText" Text="Arduano" AcceptsReturn="True" IsReadOnly="True" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" Width="281" VerticalAlignment="Bottom"/>
+                            <TextBox DockPanel.Dock="Bottom" x:Name="creditText" Text="Arduano" AcceptsReturn="True" IsReadOnly="True" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" Width="325" VerticalAlignment="Bottom"/>
                             <Label Content="{DynamicResource ifUploading}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Bottom"/>
                         </DockPanel>
 

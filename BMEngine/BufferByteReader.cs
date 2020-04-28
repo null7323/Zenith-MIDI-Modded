@@ -111,7 +111,7 @@ namespace ZenithEngine
 
         public void Skip(int count)
         {
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < count; ++i)
             {
                 /*if(Pushback != -1)
                 {
@@ -119,7 +119,7 @@ namespace ZenithEngine
                     continue;
                 }
                 */ // not found in Zenith 1
-                bufferpos++;
+                ++bufferpos;
                 if (bufferpos < maxbufferpos) continue;
                 if (bufferpos >= buffersize)
                 {

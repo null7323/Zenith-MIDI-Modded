@@ -62,8 +62,9 @@ namespace ZenithEngine
         public bool trackEnded = false;
 
         public long trackTime = 0;
-        public long lastStepTime = 0;
-        public double trackFlexTime = 0;
+        //public long lastStepTime = 0;
+        //public double trackFlexTime = 0;
+        public long prevTrackTime = 0;
         public long noteCount = 0;
         public int zerothTempo = -1;
 
@@ -94,8 +95,9 @@ namespace ZenithEngine
             reader.Reset();
             ResetColors();
             trackTime = 0;
-            lastStepTime = 0;
-            trackFlexTime = 0;
+            //lastStepTime = 0;
+            //trackFlexTime = 0;
+            prevTrackTime = 0;
             trackEnded = false;
             readDelta = false;
             channelPrefix = 0;
@@ -214,8 +216,8 @@ namespace ZenithEngine
         public void Step(long time)
         {
             timebase = settings.timeBasedNotes;
-            trackFlexTime += (time - lastStepTime) / midi.tempoTickMultiplier;
-            lastStepTime = time;
+            //trackFlexTime += (time - lastStepTime) / midi.tempoTickMultiplier;
+            //lastStepTime = time;
             try
             {
                 if (time >= trackTime)
@@ -253,8 +255,7 @@ namespace ZenithEngine
                 foreach (var un in UnendedNotes)
                 {
                     var iter = un.Iterate();
-                    Note n;
-                    while (iter.MoveNext(out n))
+                    while (iter.MoveNext(out Note n))
                     {
                         n.end = trackTime;
                         n.hasEnded = true;
@@ -278,7 +279,7 @@ namespace ZenithEngine
 
                 double time = trackTime;
                 if (timebase)
-                    time = trackFlexTime;
+                    time = (long)((time - midi.lastTempoTick) / midi.tempoTickMultiplier + midi.lastTempoTime);
 
                 byte command = reader.ReadFast();
                 if (command < 0x80)
@@ -327,7 +328,7 @@ namespace ZenithEngine
                         if (UnendedNotes == null)
                         {
                             UnendedNotes = new FastList<Note>[256 << 4];
-                            for (int i = 0; i < 256 << 4; i++)
+                            for (int i = 0; i < 256 << 4; ++i)
                             {
                                 UnendedNotes[i] = new FastList<Note>();
                             }

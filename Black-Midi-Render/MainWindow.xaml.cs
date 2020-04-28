@@ -282,7 +282,7 @@ namespace Zenith_MIDI
             InitializeComponent();
 
             // windowTabs.VersionName = /*metaSettings.VersionName*/;
-            windowTabs.VersionName = "2.0.6M4";
+            windowTabs.VersionName = "Mod 5.2";
 
             SourceInitialized += (s, e) =>
             {
@@ -314,7 +314,8 @@ namespace Zenith_MIDI
                     try
                     {
                         bgImagePath.Text = sett.defaultBackground;
-                        settings.BGImage = new Bitmap(bgImagePath.Text);
+                        // settings.BGImage = new Bitmap(bgImagePath.Text);
+                        settings.BGImage = bgImagePath.Text;
                     }
                     catch
                     {
@@ -333,7 +334,7 @@ namespace Zenith_MIDI
             // Task updateLoader = Task.Run(RunUpdateCheck);
             if (foundOmniMIDI)
             {
-                omnimidiLoader = Task.Run(() =>
+                /*omnimidiLoader = Task.Run(() =>
                 {
                     try
                     {
@@ -345,7 +346,17 @@ namespace Zenith_MIDI
                         Console.WriteLine("Failed to load KDMAPI, disabling");
                         foundOmniMIDI = false;
                     }
-                });
+                });*/
+                try
+                {
+                    KDMAPI.InitializeKDMAPIStream();
+                    Console.WriteLine("Loaded KDMAPI!");
+                }
+                catch
+                {
+                    Console.WriteLine("Cannot Initialize KDMAPI Stream, disabling...");
+                    foundOmniMIDI = false;
+                }
             }
             if (!foundOmniMIDI)
             {
@@ -354,7 +365,7 @@ namespace Zenith_MIDI
             settings = new RenderSettings();
             settings.PauseToggled += ToggledPause;
             InitialiseSettingsValues();
-            creditText.Text = "Video was rendered with Zenith\nhttps://arduano.github.io/Zenith-MIDI/start";
+            creditText.Text = "Video was rendered with Zenith Modded\nhttps://arduano.github.io/Zenith-MIDI/start";
 
             // languageLoader.Wait();
 
@@ -367,8 +378,10 @@ namespace Zenith_MIDI
                 Dictionary<string, ResourceDictionary> fullDict = new Dictionary<string, ResourceDictionary>();
                 foreach (var r in resources)
                 {
-                    ResourceDictionary file = new ResourceDictionary();
-                    file.Source = new Uri(Path.GetFullPath(r), UriKind.RelativeOrAbsolute);
+                    ResourceDictionary file = new ResourceDictionary
+                    {
+                        Source = new Uri(Path.GetFullPath(r), UriKind.RelativeOrAbsolute)
+                    };
                     var name = Path.GetFileNameWithoutExtension(r);
                     fullDict.Add(name, file);
                 }
@@ -460,19 +473,23 @@ namespace Zenith_MIDI
             }*/
             try
             {
+                double cutoffTime;
+                bool manualDelete;
+                double noteCollectorOffset = 0;
+                bool receivedInfo = false;
                 while (
                     (midifile.ParseUpTo(
-                        (long)win.midiTime + win.lastDeltaTimeOnScreen +
-                        (win.tempoFrameStep * 20 * settings.tempoMultiplier * (win.lastMV > 1 ? win.lastMV : 1)))
+                        (long)((long)win.midiTime + win.lastDeltaTimeOnScreen +
+                        (win.tempoFrameStep * 20 * settings.tempoMultiplier * (win.lastMV > 1 ? win.lastMV : 1))))
                         || nc != 0) && settings.running)
                 {
                     SpinWait.SpinUntil(() => lastWinTime != win.midiTime || render != renderer.renderer || !settings.running);
                     if (!settings.running) break;
                     Note n;
-                    double cutoffTime = win.midiTime;
-                    bool manualDelete = false;
-                    double noteCollectorOffset = 0;
-                    bool receivedInfo = false;
+                    cutoffTime = (long)win.midiTime;
+                    manualDelete = false;
+                    noteCollectorOffset = 0;
+                    receivedInfo = false;
                     while (!receivedInfo)
                         try
                         {
@@ -494,13 +511,15 @@ namespace Zenith_MIDI
                                 if (n.delete)
                                     i.Remove();
                                 else
-                                    nc++;
+                                    ++nc;
                             }
                         else
                             while (i.MoveNext(out n))
                             {
                                 if (n.hasEnded && n.end < cutoffTime)
+                                {
                                     i.Remove();
+                                }
                                 if (n.start > cutoffTime) break;
                             }
                         GC.Collect();
@@ -522,9 +541,9 @@ namespace Zenith_MIDI
                             currentProgress += "0";
                         }
                         Console.WriteLine(
-                            "进度: " + currentProgress.ToString() +
-                            "%      绘制的音符: " + renderer.renderer.LastNoteCount +
-                            "       渲染FPS: " + Math.Round(settings.liveFps) + "        渲染速率：" +
+                            "Progress: " + currentProgress.ToString() +
+                            "%      Notes drawn: " + renderer.renderer.LastNoteCount +
+                            "       Render FPS: " + Math.Round(settings.liveFps) + "        Render speed：" +
                             Math.Round(settings.liveFps / settings.fps, 3) + "x"
                             );
                     }
@@ -556,7 +575,7 @@ namespace Zenith_MIDI
             }
             winthread.GetAwaiter().GetResult();
             settings.running = false;
-            Console.WriteLine("重置MIDI文件");
+            Console.WriteLine("Reset midi file");
             midifile.Reset();
             win.Dispose();
             win = null;
@@ -564,8 +583,8 @@ namespace Zenith_MIDI
             GC.WaitForFullGCComplete();
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine(
-                    "渲染完成\n" +
-                    "渲染时长(分钟): " + Math.Round((double)timewatch.ElapsedMilliseconds / 1000 / 60 * 100) / 100);
+                    "Finished Render\n" +
+                    "Minutes to render: " + Math.Round((double)timewatch.ElapsedMilliseconds / 600) / 100);
             Console.ResetColor();
             Dispatcher.Invoke(() =>
             {
@@ -603,12 +622,12 @@ namespace Zenith_MIDI
                                     hasClass = true;
                                     var instance = (IPluginRender)Activator.CreateInstance(type, new object[] { settings });
                                     RenderPlugins.Add(instance);
-                                    Console.WriteLine("已加载 " + name);
+                                    Console.WriteLine("Loaded: " + name);
                                 }
                             }
                             if (!hasClass)
                             {
-                                MessageBox.Show("无法加载 " + name + "\n此插件没有渲染类");
+                                MessageBox.Show("Cannot load module " + name + "\nDoesn't have render class");
                             }
                         }
                         catch (RuntimeBinderException)
@@ -693,7 +712,7 @@ namespace Zenith_MIDI
 
             if (!File.Exists(midipath))
             {
-                MessageBox.Show("Midi文件不存在");
+                MessageBox.Show("Midi does not exist.");
                 return;
             }
             try
@@ -747,6 +766,7 @@ namespace Zenith_MIDI
             settings.renderSecondsDelay = 0;
             settings.preview_width = (int)previewWidthSelect.Value;
             settings.preview_height = (int)previewHeightSelect.Value;
+            settings.playbackEnabled = true;
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.RunContinuationsAsynchronously | TaskCreationOptions.LongRunning);
             Resources["notPreviewing"] = false;
         }
@@ -817,8 +837,11 @@ namespace Zenith_MIDI
             settings.audioPath = audioPath.Text;
             settings.ffRenderMask = includeAlpha.IsChecked;
             settings.ffMaskPath = alphaPath.Text;
+            // no playback
+            settings.playbackEnabled = false;
+
             // write info
-            Console.WriteLine("线程数量: " + settings.threadsForRender);
+            Console.WriteLine("Filter threads count: " + settings.threadsForRender);
             // set encoder
             settings.encoder = (string)((ComboBoxItem)encoderSelect.SelectedItem).Content;
             Console.WriteLine("编码器: " + settings.encoder);
@@ -1066,9 +1089,9 @@ namespace Zenith_MIDI
                 settings.playbackEnabled = true;
                 try
                 {
-                    Console.WriteLine("正在加载 KDMAPI...");
+                    Console.WriteLine("Loading KDMAPI...");
                     KDMAPI.InitializeKDMAPIStream();
-                    Console.WriteLine("已加载！");
+                    Console.WriteLine("Loaded!");
                 }
                 catch { }
             }
@@ -1079,9 +1102,9 @@ namespace Zenith_MIDI
                 settings.playbackEnabled = false;
                 try
                 {
-                    Console.WriteLine("正在卸载 KDMAPI...");
+                    Console.WriteLine("Unloading KDMAPI...");
                     KDMAPI.TerminateKDMAPIStream();
-                    Console.WriteLine("已卸载！");
+                    Console.WriteLine("Unloaded!");
                 }
                 catch { }
             }
@@ -1104,24 +1127,27 @@ namespace Zenith_MIDI
         {
             try
             {
-                settings.lastyBGChangeTime = DateTime.Now.Ticks;
-                if (useBGImage.IsChecked)
+                settings.lastBGChangeTime = DateTime.Now.Ticks;
+                if (useBGImage.IsChecked && bgImagePath.Text != "")
                 {
-                    try
+                    /*try
                     {
-                        settings.BGImage = new Bitmap(bgImagePath.Text);
+                        // settings.BGImage = new Bitmap(bgImagePath.Text);
+                        settings.BGImage = bgImagePath.Text;
                     }
                     catch
                     {
                         settings.BGImage = null;
                         if (bgImagePath.Text != "")
                             MessageBox.Show("Couldn't load image");
-                    }
+                    }*/
+                    settings.BGImage = bgImagePath.Text;
                 }
                 else
                 {
                     settings.BGImage = null;
                 }
+                settings.lastBGChangeTime = DateTime.Now.Ticks;
             }
             catch { }
         }
@@ -1137,7 +1163,8 @@ namespace Zenith_MIDI
                 bgImagePath.Text = open.FileName;
                 try
                 {
-                    settings.BGImage = new Bitmap(bgImagePath.Text);
+                    // settings.BGImage = new Bitmap(bgImagePath.Text);
+                    settings.BGImage = bgImagePath.Text;
                 }
                 catch
                 {
@@ -1179,6 +1206,36 @@ namespace Zenith_MIDI
         {
             if (settings == null) return;
             settings.skip = (int)skipValue.Value;
+        }
+
+        // value changed of note buffer size
+        private void NoteBufferSize_ValueChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (settings == null) return;
+            switch (noteBufferSizeComboBox.SelectedIndex)
+            {
+                case 0:
+                    settings.noteBufferSizeRadio = 32;
+                    break;
+                case 1:
+                    settings.noteBufferSizeRadio = 16;
+                    break;
+                case 2:
+                    settings.noteBufferSizeRadio = 4;
+                    break;
+                case 3:
+                    settings.noteBufferSizeRadio = 1;
+                    break;
+                case 4:
+                    settings.noteBufferSizeRadio = 0.25;
+                    break;
+                case 5:
+                    settings.noteBufferSizeRadio = 0.0625;
+                    break;
+                case 6:
+                    settings.noteBufferSizeRadio = 0.03125;
+                    break;
+            }
         }
 
         private void updateDownloaded_MouseDown(object sender, MouseButtonEventArgs e)

@@ -32,6 +32,8 @@ namespace ZenithEngine
         string searchPath = "";
         public string SelectedImage { get; private set; } = "";
         bool randomise = true;
+        // seed
+        int seed = 0;
         int selectedIndex = -1;
         List<Bitmap> images = new List<Bitmap>();
 
@@ -189,7 +191,7 @@ namespace ZenithEngine
 
         public Color4[] GetColors(int tracks)
         {
-            Random r = new Random(0);
+            Random r = new Random(seed);
             double[] order = new double[tracks << 4];
             int[] coords = new int[tracks << 4];
             for (int i = 0; i < order.Length; ++i)
@@ -203,9 +205,9 @@ namespace ZenithEngine
             }
             List<Color4> cols = new List<Color4>();
             var img = images[selectedIndex];
-            for (int i = 0; i < tracks; i++)
+            for (int i = 0; i < tracks; ++i)
             {
-                for (int j = 0; j < 16; j++)
+                for (int j = 0; j < 16; ++j)
                 {
                     int y = coords[(i << 4) + j];
                     int x = y & 15;
@@ -234,6 +236,7 @@ namespace ZenithEngine
         private void randomiseOrder_CheckToggled(object sender, RoutedPropertyChangedEventArgs<bool> e)
         {
             randomise = randomiseOrder.IsChecked;
+            if (randomise) ++seed;
         }
 
         private void openPaletteFolder_Click(object sender, RoutedEventArgs e)

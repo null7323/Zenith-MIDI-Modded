@@ -69,8 +69,9 @@ namespace ZenithEngine
 
         public bool ignoreColorEvents = false;
 
-        public long lastyBGChangeTime = -1;
-        public Bitmap BGImage = null;
+        public long lastBGChangeTime = -1;
+        // public Bitmap BGImage = null;
+        public string BGImage = "";
 
         public event Action PauseToggled;
         public bool Paused
@@ -91,7 +92,9 @@ namespace ZenithEngine
         // skip
         public int skip = 5000;
         // width, height
-        public int preview_width = 1920;
-        public int preview_height = 1080;
+        public int preview_width = (int)(OpenTK.DisplayDevice.Default.Width / 1.5);
+        public int preview_height = (int)(OpenTK.DisplayDevice.Default.Width / 1.5) / 16 * 9;
+        // note buffer size ratio
+        public double noteBufferSizeRadio = 1;
     }
 }

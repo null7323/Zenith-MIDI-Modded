@@ -32,7 +32,7 @@ namespace ScriptedRender
 
     public class Render : IPluginRender
     {
-        public string Name => "脚本";
+        public string Name => "Scripted";
         public string Description => "Uses user-made C# scripts (compiled in runtime) to give almost full control over rendering.\nExtremely customizable, relatively easy to use.";
         public string LanguageDictName => "scripted";
 
@@ -45,8 +45,9 @@ namespace ScriptedRender
         public double NoteScreenTime { get; private set; }
         public long LastNoteCount { get; private set; }
 
-        public NoteColor[][] NoteColors { get; set; }
-        public double Tempo { get; set; }
+        // public NoteColor[][] NoteColors { get; set; }
+        // public double Tempo { get; set; }
+        public double LastMidiTimePerTick { get; set; } = 500000 / 96.0;
         public MidiInfo CurrentMidi { get; set; }
 
         #region Shaders
@@ -212,13 +213,12 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, vert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, frag);
@@ -246,7 +246,7 @@ void main()
         int texIDBufferID;
 
         // int quadBufferLength = 2048 * 64;
-        const int quadBufferLength = 2048 * 64;
+        int quadBufferLength = 131072;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         double[] quadUVbuff;
@@ -282,7 +282,7 @@ void main()
 
             this.settings = new Settings();
             settingsControl = new SettingsCtrl(this.settings);
-            ((SettingsCtrl)SettingsControl).PaletteChanged += () => { ReloadTrackColors(); };
+            // ((SettingsCtrl)SettingsControl).PaletteChanged += () => { ReloadTrackColors(); };
             PreviewImage = PluginUtils.BitmapToImageSource(Properties.Resources.preview);
         }
 
@@ -411,7 +411,7 @@ void main()
                 loc = GL.GetUniformLocation(evenquadShader, "textureSampler" + (i + 1));
                 GL.Uniform1(loc, i);
             }
-        
+            quadBufferLength = (int)(quadBufferLength * renderSettings.noteBufferSizeRadio);
 
             quadVertexbuff = new double[quadBufferLength << 3];
             quadColorbuff = new float[quadBufferLength << 4];
@@ -725,28 +725,28 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 8 * 8),
+                (IntPtr)(quadBufferPos << 6),
                 quadVertexbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 16 * 4),
+                (IntPtr)(quadBufferPos << 6),
                 quadColorbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, uvBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 8 * 8),
+                (IntPtr)(quadBufferPos << 6),
                 quadUVbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, texIDBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 1 * 4 * 4),
+                (IntPtr)(quadBufferPos << 4),
                 quadTexIDbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(3, 1, VertexAttribPointerType.Float, false, 4, 0);
@@ -791,7 +791,7 @@ void main()
             image.UnlockBits(data);
         }
 
-        public void ReloadTrackColors()
+        /*public void ReloadTrackColors()
         {
             if (NoteColors == null) return;
             var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(NoteColors.Length);
@@ -806,7 +806,7 @@ void main()
                         NoteColors[i][j].right = cols[i * 32 + j * 2 + 1];
                     }
                 }
-            }*/
+            }* /
             int IndexOfI = 0;
             int IndexOfJ;
             foreach (var i in NoteColors)
@@ -822,6 +822,26 @@ void main()
                     ++IndexOfJ;
                 }
                 ++IndexOfI;
+            }
+        }*/
+        public void SetTrackColors(NoteColor[][] trkColors)
+        {
+            var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(trkColors.Length);
+            int OutIndex = 0;
+            int InsideIndex;
+            foreach (var i in trkColors)
+            {
+                InsideIndex = 0;
+                foreach (var j in i)
+                {
+                    if (j.isDefault)
+                    {
+                        trkColors[OutIndex][InsideIndex].left = cols[(OutIndex << 5) + (InsideIndex * 2)];
+                        trkColors[OutIndex][InsideIndex].right = cols[(OutIndex << 5) + (InsideIndex * 2) + 1];
+                    }
+                    ++InsideIndex;
+                }
+                ++OutIndex;
             }
         }
     }

@@ -28,12 +28,15 @@ namespace ZenithEngine
         public long noteCount = 0;
 
         public long currentSyncTime = 0;
-        public double currentFlexSyncTime = 0;
+        // public double currentFlexSyncTime = 0;
 
         public FastList<Note> globalDisplayNotes = new FastList<Note>();
         public FastList<Tempo> globalTempoEvents = new FastList<Tempo>();
         public FastList<ColorChange> globalColorEvents = new FastList<ColorChange>();
         public FastList<PlaybackEvent> globalPlaybackEvents = new FastList<PlaybackEvent>();
+
+        public long lastTempoTick = 0;
+        public double lastTempoTime = 0;
 
         public double tempoTickMultiplier = 0;
 
@@ -66,6 +69,10 @@ namespace ZenithEngine
             info.noteCount = noteCount;
             info.tickLength = maxTrackTime;
             info.trackCount = trackcount;
+
+            lastTempoTick = 0;
+            lastTempoTime = 0;
+
             tempoTickMultiplier = (double)division / 500000 * 1000;
         }
 
@@ -122,11 +129,12 @@ namespace ZenithEngine
         }
 
 
-        public bool ParseUpTo(double targetTime)
+        public bool ParseUpTo(/*double*/long targetTime)
         {
+            if (settings.timeBasedNotes) targetTime = (long)((targetTime - lastTempoTime) * tempoTickMultiplier + lastTempoTick);
             lock (globalDisplayNotes)
             {
-                if (settings.timeBasedNotes)
+                /*if (settings.timeBasedNotes)
                     for (; currentFlexSyncTime <= targetTime && settings.running; currentSyncTime++)
                     {
                         currentFlexSyncTime += 1 / tempoTickMultiplier;
@@ -141,7 +149,7 @@ namespace ZenithEngine
                             }
                         }
                         unendedTracks = ut;
-                        */
+                        * /
                         foreach (MidiTrack trk in tracks)
                         {
                             if (!trk.trackEnded)
@@ -163,7 +171,7 @@ namespace ZenithEngine
                                 ut++;
                                 t.Step(currentSyncTime);
                             }
-                        }*/
+                        }* /
                         // foreach may better
                         foreach (MidiTrack trk in tracks)
                         {
@@ -176,6 +184,25 @@ namespace ZenithEngine
                         unendedTracks = ut;
                     }
                 foreach (MidiTrack t in tracks)
+                {
+                    if (!t.trackEnded) return true;
+                }
+                return false;*/
+                int ut;
+                for (; currentSyncTime <= targetTime && settings.running; ++currentSyncTime)
+                {
+                    ut = 0;
+                    foreach (var t in tracks)
+                    {
+                        if (!t.trackEnded)
+                        {
+                            ++ut;
+                            t.Step(currentSyncTime);
+                        }
+                    }
+                    unendedTracks = ut;
+                }
+                foreach (var t in tracks)
                 {
                     if (!t.trackEnded) return true;
                 }
@@ -214,7 +241,7 @@ namespace ZenithEngine
                    }
                    lock (tempos) tempos.Add(t.TempoEvents);
                    t.Reset();
-                   Console.WriteLine("已加载轨道 " + p++ + "/" + tracks.Length);
+                   Console.WriteLine("已加载轨道 " + ++p + "/" + tracks.Length);
                    GC.Collect();
                });
             maxTrackTime = tracklens.Max();
@@ -287,15 +314,23 @@ namespace ZenithEngine
             globalColorEvents.Unlink();
             globalPlaybackEvents.Unlink();
             currentSyncTime = 0;
-            currentFlexSyncTime = 0;
+            // currentFlexSyncTime = 0;
             unendedTracks = trackcount;
             tempoTickMultiplier = (double)division / 500000 * 1000;
-            foreach (var t in tracks) t.Reset();
+            // foreach (var t in tracks) t.Reset();
+            Parallel.ForEach(tracks, t =>
+            {
+                t.Reset();
+            });
         }
 
         public void Dispose()
         {
-            foreach (var t in tracks) t.Dispose();
+            // foreach (var t in tracks) t.Dispose();
+            Parallel.ForEach(tracks, t =>
+            {
+                t.Dispose();
+            });
             MidiFileReader.Dispose();
             loadedMidi = false;
         }

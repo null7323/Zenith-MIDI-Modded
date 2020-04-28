@@ -35,9 +35,18 @@
     <system:String x:Key="renderResolution">Render Resolution</system:String>
     <system:String x:Key="previewOptions">Preview Options</system:String>
     <!--Skip-->
-    <system:String x:Key="skipLabel">Skip</system:String>
+    <system:String x:Key="skipLabel">Skipping Ticks</system:String>
     <system:String x:Key="renderOptions">Render Options</system:String>
-    
+    <!--Note Buffer Size-->
+    <system:String x:Key="noteBufferSize">Note Buffer Size</system:String>
+    <system:String x:Key="sizeExtremelyLarge">Extremely Large</system:String>
+    <system:String x:Key="sizeVeryLarge">Very Large</system:String>
+    <system:String x:Key="sizeLarge">Large</system:String>
+    <system:String x:Key="sizeStandard">Standard</system:String>
+    <system:String x:Key="sizeSmall">Small</system:String>
+    <system:String x:Key="sizeVerySmall">Very Small</system:String>
+    <system:String x:Key="sizeExtremelySmall">Extremely Small</system:String>
+
     <!--Plugins Page-->
     <system:String x:Key="reload">Reload</system:String>
     <system:String x:Key="startPreview">Start Preview</system:String>

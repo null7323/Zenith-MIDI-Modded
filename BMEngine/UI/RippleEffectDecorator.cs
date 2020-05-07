@@ -71,7 +71,7 @@ namespace ZenithEngine.UI
 
             parentGrid.PreviewMouseDown += (sender, e) =>
             {
-                var targetWidth = Math.Max(ActualWidth, ActualHeight) * 2 / ExpandTime * (ExpandTime + FadeTime);
+                var targetWidth = (Math.Max(ActualWidth, ActualHeight) * 2) / ExpandTime * (ExpandTime + FadeTime);
                 var mousePosition = (e as MouseButtonEventArgs).GetPosition(this);
                 var startMargin = new Thickness(mousePosition.X, mousePosition.Y, 0, 0);
                 var endMargin = new Thickness(mousePosition.X - targetWidth / 2, mousePosition.Y - targetWidth / 2, 0, 0);

@@ -19,7 +19,7 @@ static class  KDMAPI
         uint dwOffset;
         IntPtr dwReserved;
     }
-    
+
     public enum OMSettingMode
     {
         OM_SET = 0x0,

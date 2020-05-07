@@ -23,7 +23,7 @@ namespace ZenithEngine
             get
             {
                 if (root.Next != null) return root.Next.item;
-                else return default;
+                else return default(T);
             }
         }
         public class Iterator
@@ -33,7 +33,7 @@ namespace ZenithEngine
             private ListItem prev;
             private ListItem curr;
 
-            public /*internal*/ Iterator(FastList<T> ll)
+            internal Iterator(FastList<T> ll)
             {
                 _ilist = ll;
                 Reset();
@@ -85,17 +85,6 @@ namespace ZenithEngine
             {
                 this.prev = null;
                 this.curr = _ilist.root;
-            }
-            // move next
-            public bool MoveNext()
-            {
-                try
-                {
-                    curr = curr.Next;
-
-                    return curr != null;
-                }
-                catch { return false; }
             }
         }
 
@@ -178,14 +167,14 @@ namespace ZenithEngine
             last = null;
         }
 
-        public long Length()
+        public int Count()
         {
-            long cnt = 0;
+            int cnt = 0;
 
             ListItem li = root.Next;
             while (li != null)
             {
-                ++cnt;
+                cnt++;
                 li = li.Next;
             }
 
@@ -205,16 +194,6 @@ namespace ZenithEngine
         public IEnumerator<T> GetEnumerator()
         {
             return FastIterate();
-        }
-
-        public T Get(long index)
-        {
-            FastIterator fastIterator = new FastIterator(this);
-            for (long i = 0; i < index; ++i)
-            {
-                fastIterator.MoveNext();
-            }
-            return (T)fastIterator.Current;
         }
     }
 }

@@ -50,7 +50,7 @@ namespace MIDITrailRender
         int selectedIndex = 0;
         public long lastSetTime = 0;
 
-        string aurasFolder = "Plugins\\Assets\\MIDITrail\\Aura";
+        const string aurasFolder = "Plugins\\Assets\\MIDITrail\\Aura";
 
         public string SelectedImageName => (string)((ListBoxItem)imagesList.SelectedItem).Content;
         public Bitmap SelectedImage
@@ -151,8 +151,8 @@ namespace MIDITrailRender
                 settings.selectedAuraImage = SelectedImageName;
                 lastSetTime = DateTime.Now.Ticks;
                 var img = new Bitmap(SelectedImage);
-                for (int i = 0; i < img.Width; i++)
-                for(int j = 0; j < img.Height; j++)
+                for (int i = 0, imgWidth = img.Width; i < imgWidth; ++i)
+                for(int j = 0, imgHeight = img.Height; j < imgHeight; ++j)
                     {
                         var col = img.GetPixel(i, j);
                         img.SetPixel(i, j, Color.FromArgb(1, col.A, col.A, col.A));
@@ -169,7 +169,6 @@ namespace MIDITrailRender
             }
             catch { }
         }
-
         // radius
         private void AuraRadius_ValueChanged(object sender, RoutedPropertyChangedEventArgs<decimal> e)
         {
@@ -179,11 +178,8 @@ namespace MIDITrailRender
 
         private void AuraEnabled_Checked(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                settings.auraEnabled = auraEnabled.IsChecked;
-            }
-            catch { }
+            if (settings == null) return;
+            settings.auraEnabled = auraEnabled.IsChecked;
         }
 
         private void openFolder_Click(object sender, RoutedEventArgs e)

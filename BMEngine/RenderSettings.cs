@@ -46,15 +46,17 @@ namespace ZenithEngine
         public int maxTrackBufferSize = 10000;
 
         public bool useBitrate = true;
+        public bool CustomFFmpeg = false;
         public int bitrate = 20000;
         public int crf = 17;
-        public string crfPreset = "ultrafast";
+        public string crfPreset = "medium";
         public bool ffmpegDebug = false;
+        public string ffoption = "";
 
         public bool showNoteCount = false;
         public bool showNotesRendered = false;
         public int fontSize = 50;
-        public string font = "Source Code Pro";
+        public string font = "Arial";
 
         public bool running = false;
 
@@ -70,8 +72,7 @@ namespace ZenithEngine
         public bool ignoreColorEvents = false;
 
         public long lastBGChangeTime = -1;
-        // public Bitmap BGImage = null;
-        public string BGImage = "";
+        public string BGImage = null;
 
         public event Action PauseToggled;
         public bool Paused
@@ -84,7 +85,8 @@ namespace ZenithEngine
             }
         }
         // using threads
-        public int threadsForRender = Environment.ProcessorCount;
+        public bool useFilterThreads = false;
+        public int filterThreadsForRender = Environment.ProcessorCount;
         // encoder
         public string encoder = "libx264";
         // yuv

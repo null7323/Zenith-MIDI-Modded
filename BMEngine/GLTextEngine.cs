@@ -18,7 +18,7 @@ namespace ZenithEngine
     public class GLTextEngine
     {
         #region Shaders
-        const string textShaderVert = @"#version 330 compatibility
+        string textShaderVert = @"#version 330 compatibility
 
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 uv;
@@ -36,7 +36,7 @@ void main()
     Color = Col;
 }
 ";
-        const string textShaderFrag = @"#version 330 compatibility
+        string textShaderFrag = @"#version 330 compatibility
 
 in vec2 UV;
 in vec4 Color;
@@ -145,11 +145,11 @@ void main()
             FontSize = size;
         }
 
-        /*public void SetFont(string font, int size, string charmap)
+        public void SetFont(string font, int size, string charmap)
         {
             Characters = charmap;
             SetFont(font, size);
-        }*/
+        }
 
         public void SetFont(string font, System.Drawing.FontStyle fontStyle, int size)
         {
@@ -185,16 +185,16 @@ void main()
 
         public void Render(string text, Matrix4 transform, Color4 color)
         {
-            GL.Enable(EnableCap.Blend);
-            GL.EnableClientState(ArrayCap.VertexArray);
-            GL.EnableClientState(ArrayCap.ColorArray);
-            GL.EnableClientState(ArrayCap.TextureCoordArray);
-            GL.Enable(EnableCap.Texture2D);
+            //GL.Enable(EnableCap.Blend);
+            //GL.EnableClientState(ArrayCap.VertexArray);
+            //GL.EnableClientState(ArrayCap.ColorArray);
+            //GL.EnableClientState(ArrayCap.TextureCoordArray);
+            //GL.Enable(EnableCap.Texture2D);
 
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
+            //GL.EnableVertexAttribArray(0);
+            //GL.EnableVertexAttribArray(1);
 
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            //GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             GL.UseProgram(textShader);
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -236,13 +236,13 @@ void main()
                 Vector2 endpos = curpos + new Vector2(sz.Width, sz.Height);
 
                 int pos = quadBufferPos * 8;
-                quadVertexbuff[pos++] = curpos.X - padding;
+                quadVertexbuff[pos++] = (curpos.X - padding);
                 quadVertexbuff[pos++] = curpos.Y;
-                quadVertexbuff[pos++] = curpos.X - padding;
+                quadVertexbuff[pos++] = (curpos.X - padding);
                 quadVertexbuff[pos++] = endpos.Y;
-                quadVertexbuff[pos++] = endpos.X + padding;
+                quadVertexbuff[pos++] = (endpos.X + padding);
                 quadVertexbuff[pos++] = endpos.Y;
-                quadVertexbuff[pos++] = endpos.X + padding;
+                quadVertexbuff[pos++] = (endpos.X + padding);
                 quadVertexbuff[pos++] = curpos.Y;
 
                 curpos.X += sz.Width;
@@ -269,14 +269,14 @@ void main()
             }
             FlushQuadBuffer(false);
 
-            GL.Disable(EnableCap.Blend);
-            GL.Disable(EnableCap.Texture2D);
-            GL.DisableClientState(ArrayCap.VertexArray);
-            GL.DisableClientState(ArrayCap.ColorArray);
-            GL.DisableClientState(ArrayCap.TextureCoordArray);
+            //GL.Disable(EnableCap.Blend);
+            //GL.Disable(EnableCap.Texture2D);
+            //GL.DisableClientState(ArrayCap.VertexArray);
+            //GL.DisableClientState(ArrayCap.ColorArray);
+            //GL.DisableClientState(ArrayCap.TextureCoordArray);
 
-            GL.DisableVertexAttribArray(0);
-            GL.DisableVertexAttribArray(1);
+            //GL.DisableVertexAttribArray(0);
+            //GL.DisableVertexAttribArray(1);
         }
 
         public SizeF GetBoundBox(string text)
@@ -290,7 +290,7 @@ void main()
                 if (c == '\n')
                 {
                     curpos.X = 0;
-                    ++rows;
+                    rows++;
                 }
                 if (!Characters.Contains(c)) continue;
                 var chari = Characters.IndexOf(c);
@@ -341,18 +341,11 @@ void main()
             var characters = new List<Bitmap>();
             using (var font = new Font(fontName, fontSize, fontStyle))
             {
-                /*for (int i = 0; i < Characters.Length; i++)
+                for (int i = 0; i < Characters.Length; i++)
                 {
                     var charBmp = GenerateCharacter(font, Characters[i]);
                     charSizes[i] = GetSize(font, Characters[i]);
                     characters.Add(charBmp);
-                }*/
-                int charSizesIndex = 0;
-                foreach (var i in Characters)
-                {
-                    charSizes[charSizesIndex] = GetSize(font, i);
-                    characters.Add(GenerateCharacter(font, i));
-                    ++charSizesIndex;
                 }
                 charSize = new Size(characters.Max(x => x.Width), characters.Max(x => x.Height));
 

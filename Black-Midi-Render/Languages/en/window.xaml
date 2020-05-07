@@ -27,16 +27,16 @@
     <system:String x:Key="presets">Presets</system:String>
     <system:String x:Key="zenithRenderWarning">Warning: Zenith Preview renders in the resolution above, then downscales to the window size</system:String>
     <system:String x:Key="superRes">SSAA</system:String>
-    <!--preview-resolution-->
-    <system:String x:Key="previewWidthLabel">Preview Width</system:String>
-    <system:String x:Key="previewHeightLabel">Preview Height</system:String>
     <system:String x:Key="superResWarning">Increasing SSAA can greatly increase the smoothness of the pixels but takes much more performance</system:String>
     <system:String x:Key="language">Language</system:String>
     <system:String x:Key="renderResolution">Render Resolution</system:String>
     <system:String x:Key="previewOptions">Preview Options</system:String>
+    <system:String x:Key="renderOptions">Render Options</system:String>
+    <!--preview-resolution-->
+    <system:String x:Key="previewWidthLabel">Preview Width</system:String>
+    <system:String x:Key="previewHeightLabel">Preview Height</system:String>
     <!--Skip-->
     <system:String x:Key="skipLabel">Skipping Ticks</system:String>
-    <system:String x:Key="renderOptions">Render Options</system:String>
     <!--Note Buffer Size-->
     <system:String x:Key="noteBufferSize">Note Buffer Size</system:String>
     <system:String x:Key="sizeExtremelyLarge">Extremely Large</system:String>
@@ -65,14 +65,15 @@
     <system:String x:Key="bitrate">Bitrate</system:String>
     <system:String x:Key="crfHint">FFMPEG crf: 0 = lossless, 51 = worst quality possible</system:String>
     <system:String x:Key="delatStart">Delay start (seconds)</system:String>
+    <system:String x:Key="ffmpegDebug">ffmpeg debug</system:String>
+    <system:String x:Key="startRender">Start Render</system:String>
+    <system:String x:Key="ifUploading">If uploading the video online, please credit the program</system:String>
+    <system:String x:Key="Custom">Customize FFmpeg Options (for experts, at your own risk)</system:String>
     <!--More...-->
     <system:String x:Key="filterThreadsUsing">Filter Threads</system:String>
     <system:String x:Key="encoders">Encoder For Rendering</system:String>
     <system:String x:Key="yuv">YUV</system:String>
     <!--End-->
-    <system:String x:Key="ffmpegDebug">ffmpeg debug</system:String>
-    <system:String x:Key="startRender">Start Render</system:String>
-    <system:String x:Key="ifUploading">If uploading the video online, please credit the program</system:String>
     
     <!--NEW 1.5-->
     <system:String x:Key="realtimePlayback">Realtime Playback</system:String>

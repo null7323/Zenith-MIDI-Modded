@@ -45,13 +45,12 @@ namespace ScriptedRender
         public double NoteScreenTime { get; private set; }
         public long LastNoteCount { get; private set; }
 
-        // public NoteColor[][] NoteColors { get; set; }
-        // public double Tempo { get; set; }
-        public double LastMidiTimePerTick { get; set; } = 500000 / 96.0;
+        public NoteColor[][] NoteColors { get; set; }
+        public double Tempo { get; set; }
         public MidiInfo CurrentMidi { get; set; }
 
         #region Shaders
-        const string quadShaderVert = @"#version 330 core
+        string quadShaderVert = @"#version 330 core
 
 layout(location=0) in vec2 in_position;
 layout(location=1) in vec4 in_color;
@@ -70,7 +69,7 @@ void main()
     texid = in_texid;
 }
 ";
-        const string quadShaderFrag = @"#version 330 core
+        string quadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -110,7 +109,7 @@ void main()
     out_color = col * v2f_color;
 }
 ";
-        const string invertQuadShaderFrag = @"#version 330 core
+        string invertQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -155,7 +154,7 @@ void main()
     out_color.w = 1 - out_color.w;
 }
 ";
-        const string evenQuadShaderFrag = @"#version 330 core
+        string evenQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -213,12 +212,13 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
+            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, vert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, frag);
@@ -245,8 +245,7 @@ void main()
         int uvBufferID;
         int texIDBufferID;
 
-        // int quadBufferLength = 2048 * 64;
-        int quadBufferLength = 131072;
+        int quadBufferLength = 2048 * 64;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         double[] quadUVbuff;
@@ -254,7 +253,7 @@ void main()
         int quadBufferPos = 0;
 
         int indexBufferId;
-        uint[] indexes = new uint[(2048 << 7) * 6];
+        uint[] indexes = new uint[2048 * 128 * 6];
 
         double[] x1arrayKeys = new double[257];
         double[] x1arrayNotes = new double[257];
@@ -282,7 +281,7 @@ void main()
 
             this.settings = new Settings();
             settingsControl = new SettingsCtrl(this.settings);
-            // ((SettingsCtrl)SettingsControl).PaletteChanged += () => { ReloadTrackColors(); };
+            ((SettingsCtrl)SettingsControl).PaletteChanged += () => { ReloadTrackColors(); };
             PreviewImage = PluginUtils.BitmapToImageSource(Properties.Resources.preview);
         }
 
@@ -340,7 +339,6 @@ void main()
                 }
                 else
                 {
-                    
                     lt.engine.SetFont(lt.fontName, (System.Drawing.FontStyle)lt.fontStyle, lt.fontPixelSize, lt.charMap);
                 }
             }
@@ -388,7 +386,7 @@ void main()
 
             int loc;
             int[] samplers = new int[12];
-            for (int i = 0; i < 12; ++i)
+            for (int i = 0; i < 12; i++)
             {
                 samplers[i] = i;
             }
@@ -411,12 +409,11 @@ void main()
                 loc = GL.GetUniformLocation(evenquadShader, "textureSampler" + (i + 1));
                 GL.Uniform1(loc, i);
             }
-            quadBufferLength = (int)(quadBufferLength * renderSettings.noteBufferSizeRadio);
 
-            quadVertexbuff = new double[quadBufferLength << 3];
-            quadColorbuff = new float[quadBufferLength << 4];
-            quadUVbuff = new double[quadBufferLength << 3];
-            quadTexIDbuff = new float[quadBufferLength << 2];
+            quadVertexbuff = new double[quadBufferLength * 8];
+            quadColorbuff = new float[quadBufferLength * 16];
+            quadUVbuff = new double[quadBufferLength * 8];
+            quadTexIDbuff = new float[quadBufferLength * 4];
 
             GL.GenBuffers(1, out vertexBufferID);
             GL.GenBuffers(1, out colorBufferID);
@@ -436,7 +433,7 @@ void main()
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBufferId);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
-                (IntPtr)(indexes.Length << 2),
+                (IntPtr)(indexes.Length * 4),
                 indexes,
                 BufferUsageHint.StaticDraw);
 
@@ -576,7 +573,7 @@ void main()
             int texSlot = -1;
             if (tex != null) texSlot = FindTexSlot(tex.texId);
 
-            int pos = quadBufferPos << 3;
+            int pos = quadBufferPos * 8;
             quadVertexbuff[pos++] = left;
             quadVertexbuff[pos++] = top;
             quadVertexbuff[pos++] = right;
@@ -586,7 +583,7 @@ void main()
             quadVertexbuff[pos++] = left;
             quadVertexbuff[pos++] = bottom;
 
-            pos = quadBufferPos << 4;
+            pos = quadBufferPos * 16;
             quadColorbuff[pos++] = topLeft.R;
             quadColorbuff[pos++] = topLeft.G;
             quadColorbuff[pos++] = topLeft.B;
@@ -604,7 +601,7 @@ void main()
             quadColorbuff[pos++] = bottomLeft.B;
             quadColorbuff[pos++] = bottomLeft.A;
 
-            pos = quadBufferPos << 3;
+            pos = quadBufferPos * 8;
             quadUVbuff[pos++] = uvLeft;
             quadUVbuff[pos++] = uvTop;
             quadUVbuff[pos++] = uvRight;
@@ -614,7 +611,7 @@ void main()
             quadUVbuff[pos++] = uvLeft;
             quadUVbuff[pos++] = uvBottom;
 
-            pos = quadBufferPos << 2;
+            pos = quadBufferPos * 4;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
@@ -628,7 +625,7 @@ void main()
             int texSlot = -1;
             if (tex != null) texSlot = FindTexSlot(tex.texId);
 
-            int pos = quadBufferPos << 3;
+            int pos = quadBufferPos * 8;
             quadVertexbuff[pos++] = v1.X;
             quadVertexbuff[pos++] = v1.Y;
             quadVertexbuff[pos++] = v2.X;
@@ -638,7 +635,7 @@ void main()
             quadVertexbuff[pos++] = v4.X;
             quadVertexbuff[pos++] = v4.Y;
 
-            pos = quadBufferPos << 4;
+            pos = quadBufferPos * 16;
             quadColorbuff[pos++] = c1.R;
             quadColorbuff[pos++] = c1.G;
             quadColorbuff[pos++] = c1.B;
@@ -656,7 +653,7 @@ void main()
             quadColorbuff[pos++] = c4.B;
             quadColorbuff[pos++] = c4.A;
 
-            pos = quadBufferPos << 3;
+            pos = quadBufferPos * 8;
             quadUVbuff[pos++] = uv1.X;
             quadUVbuff[pos++] = uv1.Y;
             quadUVbuff[pos++] = uv2.X;
@@ -666,7 +663,7 @@ void main()
             quadUVbuff[pos++] = uv4.X;
             quadUVbuff[pos++] = uv4.Y;
 
-            pos = quadBufferPos << 2;
+            pos = quadBufferPos * 4;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
             quadTexIDbuff[pos++] = texSlot;
@@ -675,10 +672,9 @@ void main()
             FlushQuadBuffer(true);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         int FindTexSlot(int id)
         {
-            /*for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 12; i++)
             {
                 if (activeTexIds[i] == id) return i;
                 if (activeTexIds[i] == -1)
@@ -687,18 +683,7 @@ void main()
                     return i;
                 }
             }
-            FlushQuadBuffer(false);*/
-            int IndexOfI = 0;
-            foreach (var i in activeTexIds)
-            {
-                if (i == id) return IndexOfI;
-                if (i == -1)
-                {
-                    activeTexIds[IndexOfI] = id;
-                    return IndexOfI;
-                }
-                ++IndexOfI;
-            }
+            FlushQuadBuffer(false);
             activeTexIds[0] = id;
             return 0;
         }
@@ -725,28 +710,28 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos << 6),
+                (IntPtr)(quadBufferPos * 8 * 8),
                 quadVertexbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos << 6),
+                (IntPtr)(quadBufferPos * 16 * 4),
                 quadColorbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, uvBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos << 6),
+                (IntPtr)(quadBufferPos * 8 * 8),
                 quadUVbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, texIDBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos << 4),
+                (IntPtr)(quadBufferPos * 1 * 4 * 4),
                 quadTexIDbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(3, 1, VertexAttribPointerType.Float, false, 4, 0);
@@ -791,12 +776,12 @@ void main()
             image.UnlockBits(data);
         }
 
-        /*public void ReloadTrackColors()
+        public void ReloadTrackColors()
         {
             if (NoteColors == null) return;
             var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(NoteColors.Length);
-            
-            /*for (int i = 0; i < NoteColors.Length; i++)
+
+            for (int i = 0; i < NoteColors.Length; i++)
             {
                 for (int j = 0; j < NoteColors[i].Length; j++)
                 {
@@ -806,42 +791,6 @@ void main()
                         NoteColors[i][j].right = cols[i * 32 + j * 2 + 1];
                     }
                 }
-            }* /
-            int IndexOfI = 0;
-            int IndexOfJ;
-            foreach (var i in NoteColors)
-            {
-                IndexOfJ = 0;
-                foreach (var j in i)
-                {
-                    if (j.isDefault)
-                    {
-                        j.left = cols[(IndexOfI << 5) + (IndexOfJ * 2)];
-                        j.right = cols[(IndexOfI << 5) + (IndexOfJ * 2) + 1];
-                    }
-                    ++IndexOfJ;
-                }
-                ++IndexOfI;
-            }
-        }*/
-        public void SetTrackColors(NoteColor[][] trkColors)
-        {
-            var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(trkColors.Length);
-            int OutIndex = 0;
-            int InsideIndex;
-            foreach (var i in trkColors)
-            {
-                InsideIndex = 0;
-                foreach (var j in i)
-                {
-                    if (j.isDefault)
-                    {
-                        trkColors[OutIndex][InsideIndex].left = cols[(OutIndex << 5) + (InsideIndex * 2)];
-                        trkColors[OutIndex][InsideIndex].right = cols[(OutIndex << 5) + (InsideIndex * 2) + 1];
-                    }
-                    ++InsideIndex;
-                }
-                ++OutIndex;
             }
         }
     }

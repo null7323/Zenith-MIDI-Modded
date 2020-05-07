@@ -13,7 +13,7 @@ namespace Zenith_MIDI
     class Settings
     {
         public string PreviousVersion = "";
-        public string VersionName = "2.0.6M5";
+        public string VersionName = "2.1.3moddedver6";
         public string LanguagesVersion = "";
         public bool AutoUpdate = false;
         public bool Installed = false;
@@ -47,15 +47,13 @@ namespace Zenith_MIDI
 
         public void SaveConfig()
         {
-            var jobj = new JObject
-            {
-                { "version", VersionName },
-                { "langsVersion", LanguagesVersion },
-                { "selectedLang", SelectedLanguage },
-                { "autoUpdate", AutoUpdate },
-                { "installed", Installed },
-                { "installerVer", InstallerVer }
-            };
+            var jobj = new JObject();
+            jobj.Add("version", VersionName);
+            jobj.Add("langsVersion", LanguagesVersion);
+            jobj.Add("selectedLang", SelectedLanguage);
+            jobj.Add("autoUpdate", AutoUpdate);
+            jobj.Add("installed", Installed);
+            jobj.Add("installerVer", InstallerVer);
 
             var stream = new StreamWriter(new GZipStream(File.Open(SettingsPath, FileMode.Create), CompressionMode.Compress));
             stream.Write(JsonConvert.SerializeObject(jobj));

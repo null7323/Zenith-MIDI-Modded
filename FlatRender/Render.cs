@@ -100,8 +100,7 @@ void main()
         int vertexBufferID;
         int colorBufferID;
 
-        // int quadBufferLength = 2048 * 2;
-        const int quadBufferLength = 2048 * 2;
+        int quadBufferLength = 2048 * 2;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         int quadBufferPos = 0;
@@ -144,12 +143,13 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
+            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, noteShaderVert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, noteShaderFrag);
@@ -218,7 +218,7 @@ void main()
 
             double deltaTimeOnScreen = NoteScreenTime;
             double pianoHeight = settings.pianoHeight;
-            // bool sameWidth = settings.sameWidthNotes;
+            bool sameWidth = settings.sameWidthNotes;
             Color4[] keyColors = new Color4[514];
             for (int i = 0; i < 514; i++) keyColors[i] = Color4.Transparent;
             double wdth;
@@ -295,10 +295,8 @@ void main()
                                 Color4 colr = n.color.right;
                                 if (n.start < midiTime)
                                 {
-                                    //Color4 origcoll = keyColors[k * 2];
                                     Color4 origcoll = keyColors[k * 2];
-                                    //Color4 origcolr = keyColors[k * 2 + 1];
-                                    Color4 origcolr = keyColors[(k * 2) + 1];
+                                    Color4 origcolr = keyColors[k * 2 + 1];
                                     float blendfac = coll.A;
                                     float revblendfac = 1 - blendfac;
                                     keyColors[k * 2] = new Color4(
@@ -308,7 +306,7 @@ void main()
                                         1);
                                     blendfac = colr.A;
                                     revblendfac = 1 - blendfac;
-                                    keyColors[(k * 2) + 1] = new Color4(
+                                    keyColors[k * 2 + 1] = new Color4(
                                         colr.R * blendfac + origcolr.R * revblendfac,
                                         colr.G * blendfac + origcolr.G * revblendfac,
                                         colr.B * blendfac + origcolr.B * revblendfac,
@@ -374,7 +372,7 @@ void main()
 
             #region Keyboard
             y1 = pianoHeight;
-            // y2 = 0;
+            y2 = 0;
             Color4[] origColors = new Color4[257];
             for (int k = kbfirstNote; k < kblastNote; k++)
             {
@@ -396,63 +394,35 @@ void main()
                     if (settings.sameWidthNotes)
                     {
                         int _n = n % 12;
-                        switch (_n)
+                        if (_n == 0)
+                            x2 += wdth * 0.666;
+                        else if (_n == 2)
                         {
-                            case 0:
-                                x2 += wdth * 0.666;
-                                /*
-                                if (_n == 0)
-                                    x2 += wdth * 0.666;*/
-                                break;
-                            case 2:
-                                x1 -= wdth / 3;
-                                x2 += wdth / 3;
-                                /*else if (_n == 2)
-                                {
-                                    x1 -= wdth / 3;
-                                    x2 += wdth / 3;
-                                }*/
-                                break;
-                            case 4:
-                                x1 -= wdth / 3 * 2;
-                                /*else if (_n == 4)
-                                    x1 -= wdth / 3 * 2;*/
-                                break;
-                            case 5:
-                                x2 += wdth * 0.75;
-                                /*else if (_n == 5)
-                                    x2 += wdth * 0.75;*/
-                                break;
-                            case 7:
-                                x1 -= wdth / 4;
-                                x2 += wdth / 2;
-                                /*else if (_n == 7)
-                                {
-                                    x1 -= wdth / 4;
-                                    x2 += wdth * 0.5;
-                                }*/
-                                break;
-                            case 9:
-                                x1 -= wdth / 2;
-                                x2 += wdth / 4;
-                                /*else if (_n == 9)
-                                {
-                                    x1 -= wdth / 2;
-                                    x2 += wdth / 4;
-                                }*/
-                                break;
-                            case 11:
-                                x1 -= wdth * 0.75;
-                                /*else if (_n == 11)
-                                    x1 -= wdth * 0.75;*/
-                                break;
+                            x1 -= wdth / 3;
+                            x2 += wdth / 3;
                         }
+                        else if (_n == 4)
+                            x1 -= wdth / 3 * 2;
+                        else if (_n == 5)
+                            x2 += wdth * 0.75;
+                        else if (_n == 7)
+                        {
+                            x1 -= wdth / 4;
+                            x2 += wdth / 2;
+                        }
+                        else if (_n == 9)
+                        {
+                            x1 -= wdth / 2;
+                            x2 += wdth / 4;
+                        }
+                        else if (_n == 11)
+                            x1 -= wdth * 0.75;
                     }
                 }
                 else continue;
 
                 var coll = keyColors[n * 2];
-                var colr = keyColors[(n * 2) + 1];
+                var colr = keyColors[n * 2 + 1];
                 var origcol = origColors[n];
                 float blendfac = coll.A;
                 float revblendfac = 1 - blendfac;
@@ -515,14 +485,12 @@ void main()
 
                 if (blackKeys[n])
                 {
-                    y2 = pianoHeight * 0.1 * 3.7;
+                    y2 = pianoHeight / 10 * 3.7;
                 }
                 else continue;
 
-                // var coll = keyColors[n * 2];
-                // var colr = keyColors[n * 2 + 1];
                 var coll = keyColors[n * 2];
-                var colr = keyColors[(n * 2) + 1];
+                var colr = keyColors[n * 2 + 1];
                 var origcol = origColors[n];
                 float blendfac = coll.A;
                 float revblendfac = 1 - blendfac;
@@ -615,7 +583,7 @@ void main()
 
         bool isBlackNote(int n)
         {
-            n %= 12;
+            n = n % 12;
             return n == 1 || n == 3 || n == 6 || n == 8 || n == 10;
         }
 
@@ -624,7 +592,7 @@ void main()
             if (NoteColors == null) return;
             var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(NoteColors.Length);
 
-            /* for (int i = 0; i < NoteColors.Length; i++)
+            for (int i = 0; i < NoteColors.Length; i++)
             {
                 for (int j = 0; j < NoteColors[i].Length; j++)
                 {
@@ -634,22 +602,6 @@ void main()
                         NoteColors[i][j].right = cols[i * 32 + j * 2 + 1];
                     }
                 }
-            }*/
-            int IndexOfI = 0;
-            int IndexOfJ;
-            foreach (var i in NoteColors)
-            {
-                IndexOfJ = 0;
-                foreach (var j in i)
-                {
-                    if (j.isDefault)
-                    {
-                        j.left = cols[(IndexOfI << 5) + (IndexOfJ * 2)];
-                        j.right = cols[(IndexOfI << 5) + (IndexOfJ * 2) + 1];
-                    }
-                    ++IndexOfJ;
-                }
-                ++IndexOfI;
             }
         }
     }

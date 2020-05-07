@@ -16,7 +16,7 @@ namespace TexturedRender
 {
     public class Render : IPluginRender
     {
-        public string Name => "自定义材质";
+        public string Name => "Textured";
 
         public string Description => "Plugin for loading and rendering custom resource packs, " +
             "with settings defined in a .json file";
@@ -24,7 +24,7 @@ namespace TexturedRender
         public string LanguageDictName { get; } = "textured";
 
         #region Shaders
-        const string quadShaderVert = @"#version 330 core
+        string quadShaderVert = @"#version 330 core
 
 layout(location=0) in vec2 in_position;
 layout(location=1) in vec4 in_color;
@@ -43,7 +43,7 @@ void main()
     texid = in_texid;
 }
 ";
-        const string quadShaderFrag = @"#version 330 core
+        string quadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -82,7 +82,7 @@ void main()
     out_color = col * v2f_color;
 }
 ";
-        const string invertQuadShaderFrag = @"#version 330 core
+        string invertQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -126,7 +126,7 @@ void main()
     out_color.w = 1 - out_color.w;
 }
 ";
-        const string evenQuadShaderFrag = @"#version 330 core
+        string evenQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -183,12 +183,13 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
+            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, vert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, frag);
@@ -266,8 +267,7 @@ void main()
         int uvBufferID;
         int texIDBufferID;
 
-        // int quadBufferLength = 2048 * 64;
-        const int quadBufferLength = 4096;
+        int quadBufferLength = 2048 * 64;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         double[] quadUVbuff;
@@ -278,7 +278,7 @@ void main()
         Settings settings;
 
         int indexBufferId;
-        uint[] indexes = new uint[(2048 << 7) * 6];
+        uint[] indexes = new uint[2048 * 128 * 6];
 
         bool[] blackKeys = new bool[257];
         int[] keynum = new int[257];
@@ -449,10 +449,10 @@ void main()
                 GL.Uniform1(loc, i);
             }
 
-            quadVertexbuff = new double[quadBufferLength << 3];
-            quadColorbuff = new float[quadBufferLength << 4];
-            quadUVbuff = new double[quadBufferLength << 3];
-            quadTexIDbuff = new float[quadBufferLength << 2];
+            quadVertexbuff = new double[quadBufferLength * 8];
+            quadColorbuff = new float[quadBufferLength * 16];
+            quadUVbuff = new double[quadBufferLength * 8];
+            quadTexIDbuff = new float[quadBufferLength * 4];
 
             LoadPack();
 
@@ -474,7 +474,7 @@ void main()
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBufferId);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
-                (IntPtr)(indexes.Length << 2),
+                (IntPtr)(indexes.Length * 4),
                 indexes,
                 BufferUsageHint.StaticDraw);
             Initialized = true;
@@ -528,7 +528,7 @@ void main()
 
             double deltaTimeOnScreen = settings.deltaTimeOnScreen;
             double viewAspect = (double)renderSettings.width / renderSettings.height;
-            double keyboardHeightFull = currPack.keyboardHeight / (lastNote - firstNote) * 128 / (16.0 / 9.0) * viewAspect;
+            double keyboardHeightFull = currPack.keyboardHeight / (lastNote - firstNote) * 128 / (1920.0 / 1080.0) * viewAspect;
             double keyboardHeight = keyboardHeightFull;
             double barHeight = keyboardHeightFull * currPack.barHeight;
             if (currPack.useBar) keyboardHeight -= barHeight;
@@ -569,30 +569,13 @@ void main()
                     else
                     {
                         int _i = i + 1;
-                        wdth = currPack.blackKeyScale;
+                        wdth = currPack.blackKeyScale * currPack.advancedBlackKeySizes[keynum[i] % 5];
                         int bknum = keynum[i] % 5;
-                        double offset = wdth * 2;
-                        /*
-                        if (bknum == 0) offset += wdth * 0.5 * currPack.blackKey2setOffset;
-                        if (bknum == 2) offset += wdth * 0.5 * currPack.blackKey3setOffset;
-                        if (bknum == 1) offset -= wdth * 0.5 * currPack.blackKey2setOffset;
-                        if (bknum == 4) offset -= wdth * 0.5 * currPack.blackKey3setOffset;
-                        */
-                        switch (bknum)
-                        {
-                            case 0:
-                                offset += wdth / 2 * currPack.blackKey2setOffset;
-                                break;
-                            case 2:
-                                offset += wdth / 2 * currPack.blackKey3setOffset;
-                                break;
-                            case 1:
-                                offset -= wdth / 2 * currPack.blackKey2setOffset;
-                                break;
-                            case 4:
-                                offset -= wdth / 2 * currPack.blackKey3setOffset;
-                                break;
-                        }
+                        double offset = wdth / 2;
+                        if (bknum == 0) offset += wdth / 2 * currPack.blackKey2setOffset;
+                        if (bknum == 2) offset += wdth / 2 * currPack.blackKey3setOffset;
+                        if (bknum == 1) offset -= wdth / 2 * currPack.blackKey2setOffset;
+                        if (bknum == 4) offset -= wdth / 2 * currPack.blackKey3setOffset;
 
                         offset -= currPack.advancedBlackKeyOffsets[keynum[i] % 5] * wdth / 2;
 
@@ -600,25 +583,10 @@ void main()
                         wdtharrayKeys[i] = wdth;
 
                         offset -= wdth / 2 * (1 - currPack.blackNoteScale);
-                        /*if (bknum == 0) offset += wdth * 0.5 * currPack.blackNote2setOffset;
-                        if (bknum == 2) offset += wdth * 0.5 * currPack.blackNote3setOffset;
-                        if (bknum == 1) offset -= wdth * 0.5 * currPack.blackNote2setOffset;
-                        if (bknum == 4) offset -= wdth * 0.5 * currPack.blackNote3setOffset;*/
-                        switch (bknum)
-                        {
-                            case 0:
-                                offset += wdth / 2 * currPack.blackNote2setOffset;
-                                break;
-                            case 2:
-                                offset += wdth / 2 * currPack.blackNote3setOffset;
-                                break;
-                            case 1:
-                                offset -= wdth / 2 * currPack.blackNote2setOffset;
-                                break;
-                            case 4:
-                                offset -= wdth / 2 * currPack.blackNote3setOffset;
-                                break;
-                        }
+                        if (bknum == 0) offset += wdth / 2 * currPack.blackNote2setOffset;
+                        if (bknum == 2) offset += wdth / 2 * currPack.blackNote3setOffset;
+                        if (bknum == 1) offset -= wdth / 2 * currPack.blackNote2setOffset;
+                        if (bknum == 4) offset -= wdth / 2 * currPack.blackNote3setOffset;
                         wdth *= currPack.blackNoteScale;
 
                         x1arrayNotes[i] = (float)keynum[_i] - offset;
@@ -660,7 +628,7 @@ void main()
             var currNoteTex = currPack.NoteTextures[0];
             var noteTextures = currPack.NoteTextures;
             GL.BindTexture(TextureTarget.Texture2D, currNoteTex.noteMiddleTexID);
-            /*for (int i = 0; i < noteTextures.Length; i++)
+            for (int i = 0; i < noteTextures.Length; i++)
             {
                 GL.ActiveTexture(TextureUnit.Texture0 + (i * 3));
                 GL.BindTexture(TextureTarget.Texture2D, noteTextures[i].noteMiddleTexID);
@@ -671,20 +639,6 @@ void main()
                     GL.ActiveTexture(TextureUnit.Texture0 + (i * 3) + 2);
                     GL.BindTexture(TextureTarget.Texture2D, noteTextures[i].noteTopTexID);
                 }
-            }*/
-            int noteTexturesIndex = 0;
-            foreach (var i in noteTextures)
-            {
-                GL.ActiveTexture(TextureUnit.Texture0 + (noteTexturesIndex * 3));
-                GL.BindTexture(TextureTarget.Texture2D, i.noteMiddleTexID);
-                if (i.useCaps)
-                {
-                    GL.ActiveTexture(TextureUnit.Texture0 + (noteTexturesIndex * 3) + 1);
-                    GL.BindTexture(TextureTarget.Texture2D, i.noteMiddleTexID);
-                    GL.ActiveTexture(TextureUnit.Texture0 + (noteTexturesIndex * 3) + 1);
-                    GL.BindTexture(TextureTarget.Texture2D, i.noteMiddleTexID);
-                }
-                ++noteTexturesIndex;
             }
             SwitchShader(currPack.noteShader);
             for (int i = 0; i < 2; i++)
@@ -827,7 +781,7 @@ void main()
                             quadVertexbuff[pos++] = x1;
                             quadVertexbuff[pos++] = y2;
 
-                            pos = quadBufferPos << 4;
+                            pos = quadBufferPos * 16;
                             if (blackKeys[n.key])
                             {
                                 float multiply = (float)currNoteTex.darkenBlackNotes;
@@ -868,7 +822,7 @@ void main()
                             quadColorbuff[pos++] = b2;
                             quadColorbuff[pos++] = a2;
 
-                            pos = quadBufferPos << 3;
+                            pos = quadBufferPos * 8;
                             quadUVbuff[pos++] = 1;
                             quadUVbuff[pos++] = 0;
                             quadUVbuff[pos++] = 1;
@@ -878,7 +832,7 @@ void main()
                             quadUVbuff[pos++] = 0;
                             quadUVbuff[pos++] = 0;
 
-                            pos = quadBufferPos << 2;
+                            pos = quadBufferPos * 4;
                             quadTexIDbuff[pos++] = tex;
                             quadTexIDbuff[pos++] = tex;
                             quadTexIDbuff[pos++] = tex;
@@ -889,7 +843,7 @@ void main()
 
                             if (ntex.useCaps)
                             {
-                                pos = quadBufferPos << 3;
+                                pos = quadBufferPos * 8;
                                 quadVertexbuff[pos++] = x2;
                                 quadVertexbuff[pos++] = yy2;
                                 quadVertexbuff[pos++] = x2;
@@ -899,7 +853,7 @@ void main()
                                 quadVertexbuff[pos++] = x1;
                                 quadVertexbuff[pos++] = yy2;
 
-                                pos = quadBufferPos << 4;
+                                pos = quadBufferPos * 16;
                                 quadColorbuff[pos++] = r;
                                 quadColorbuff[pos++] = g;
                                 quadColorbuff[pos++] = b;
@@ -917,7 +871,7 @@ void main()
                                 quadColorbuff[pos++] = b2;
                                 quadColorbuff[pos++] = a2;
 
-                                pos = quadBufferPos << 3;
+                                pos = quadBufferPos * 8;
                                 quadUVbuff[pos++] = 1;
                                 quadUVbuff[pos++] = 1;
                                 quadUVbuff[pos++] = 1;
@@ -927,8 +881,8 @@ void main()
                                 quadUVbuff[pos++] = 0;
                                 quadUVbuff[pos++] = 1;
 
-                                pos = quadBufferPos << 2;
-                                ++tex;
+                                pos = quadBufferPos * 4;
+                                tex++;
                                 quadTexIDbuff[pos++] = tex;
                                 quadTexIDbuff[pos++] = tex;
                                 quadTexIDbuff[pos++] = tex;
@@ -937,7 +891,7 @@ void main()
                                 quadBufferPos++;
                                 FlushQuadBuffer();
 
-                                pos = quadBufferPos << 3;
+                                pos = quadBufferPos * 8;
                                 quadVertexbuff[pos++] = x2;
                                 quadVertexbuff[pos++] = y1;
                                 quadVertexbuff[pos++] = x2;
@@ -947,7 +901,7 @@ void main()
                                 quadVertexbuff[pos++] = x1;
                                 quadVertexbuff[pos++] = y1;
 
-                                pos = quadBufferPos << 4;
+                                pos = quadBufferPos * 16;
                                 quadColorbuff[pos++] = r;
                                 quadColorbuff[pos++] = g;
                                 quadColorbuff[pos++] = b;
@@ -965,7 +919,7 @@ void main()
                                 quadColorbuff[pos++] = b2;
                                 quadColorbuff[pos++] = a2;
 
-                                pos = quadBufferPos << 3;
+                                pos = quadBufferPos * 8;
                                 quadUVbuff[pos++] = 1;
                                 quadUVbuff[pos++] = 1;
                                 quadUVbuff[pos++] = 1;
@@ -975,8 +929,8 @@ void main()
                                 quadUVbuff[pos++] = 0;
                                 quadUVbuff[pos++] = 1;
 
-                                pos = quadBufferPos << 2;
-                                ++tex;
+                                pos = quadBufferPos * 4;
+                                tex++;
                                 quadTexIDbuff[pos++] = tex;
                                 quadTexIDbuff[pos++] = tex;
                                 quadTexIDbuff[pos++] = tex;
@@ -1006,7 +960,7 @@ void main()
             GL.UseProgram(quadShader);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, currPack.barTexID);
-            pos = quadBufferPos << 3;
+            pos = quadBufferPos * 8;
             quadVertexbuff[pos++] = 0;
             quadVertexbuff[pos++] = keyboardHeightFull;
             quadVertexbuff[pos++] = 1;
@@ -1016,7 +970,7 @@ void main()
             quadVertexbuff[pos++] = 0;
             quadVertexbuff[pos++] = keyboardHeight;
 
-            pos = quadBufferPos << 4;
+            pos = quadBufferPos * 16;
             quadColorbuff[pos++] = 1;
             quadColorbuff[pos++] = 1;
             quadColorbuff[pos++] = 1;
@@ -1034,7 +988,7 @@ void main()
             quadColorbuff[pos++] = 1;
             quadColorbuff[pos++] = 1;
 
-            pos = quadBufferPos << 3;
+            pos = quadBufferPos * 8;
             quadUVbuff[pos++] = 0;
             quadUVbuff[pos++] = 0;
             quadUVbuff[pos++] = 1;
@@ -1044,7 +998,7 @@ void main()
             quadUVbuff[pos++] = 0;
             quadUVbuff[pos++] = 1;
 
-            pos = quadBufferPos << 2;
+            pos = quadBufferPos * 4;
             quadTexIDbuff[pos++] = 0;
             quadTexIDbuff[pos++] = 0;
             quadTexIDbuff[pos++] = 0;
@@ -1053,6 +1007,7 @@ void main()
             FlushQuadBuffer(false);
 
             y1 = keyboardHeight;
+            y2 = 0;
             Color4[] origColors = new Color4[257];
             SwitchShader(currPack.whiteKeyShader);
             GL.ActiveTexture(TextureUnit.Texture1);
@@ -1094,35 +1049,7 @@ void main()
                     if (sameWidth)
                     {
                         int _n = n % 12;
-                        switch (_n)
-                        {
-                            case 0:
-                                x2 += wdth * 0.666;
-                                break;
-                            case 2:
-                                x1 -= wdth / 3;
-                                x2 += wdth / 3;
-                                break;
-                            case 4:
-                                x1 -= wdth / 3 * 2;
-                                break;
-                            case 5:
-                                x2 += wdth * 0.75;
-                                break;
-                            case 7:
-                                x1 -= wdth / 4;
-                                x2 += wdth / 2;
-                                break;
-                            case 9:
-                                x1 -= wdth / 2;
-                                x2 += wdth / 4;
-                                break;
-                            case 11:
-                                x1 -= wdth * 0.75;
-                                break;
-                        }
-                    }
-                        /*if (_n == 0)
+                        if (_n == 0)
                             x2 += wdth * 0.666;
                         else if (_n == 2)
                         {
@@ -1136,16 +1063,16 @@ void main()
                         else if (_n == 7)
                         {
                             x1 -= wdth / 4;
-                            x2 += wdth * 0.5;
+                            x2 += wdth / 2;
                         }
                         else if (_n == 9)
                         {
-                            x1 -= wdth * 0.5;
+                            x1 -= wdth / 2;
                             x2 += wdth / 4;
                         }
                         else if (_n == 11)
                             x1 -= wdth * 0.75;
-                    }*/
+                    }
                 }
                 else continue;
 
@@ -1187,7 +1114,7 @@ void main()
                 if (pressed == 1) yy1 += keyboardHeightFull * currPack.whiteKeyPressedOversize;
                 else yy1 += keyboardHeightFull * currPack.whiteKeyOversize;
 
-                pos = quadBufferPos << 3;
+                pos = quadBufferPos * 8;
                 quadVertexbuff[pos++] = x1;
                 quadVertexbuff[pos++] = y2;
                 quadVertexbuff[pos++] = x2;
@@ -1197,7 +1124,7 @@ void main()
                 quadVertexbuff[pos++] = x1;
                 quadVertexbuff[pos++] = yy1;
 
-                pos = quadBufferPos << 4;
+                pos = quadBufferPos * 16;
                 quadColorbuff[pos++] = r;
                 quadColorbuff[pos++] = g;
                 quadColorbuff[pos++] = b;
@@ -1217,7 +1144,7 @@ void main()
 
                 if (!currPack.whiteKeysFullOctave)
                 {
-                    pos = quadBufferPos << 3;
+                    pos = quadBufferPos * 8;
                     quadUVbuff[pos++] = 0;
                     quadUVbuff[pos++] = 1;
                     quadUVbuff[pos++] = 1;
@@ -1232,7 +1159,7 @@ void main()
                     var k = keynum[n] % 7;
                     double uvl = k / 7.0;
                     double uvr = (k + 1) / 7.0;
-                    pos = quadBufferPos << 3;
+                    pos = quadBufferPos * 8;
                     quadUVbuff[pos++] = uvl;
                     quadUVbuff[pos++] = 1;
                     quadUVbuff[pos++] = uvr;
@@ -1243,7 +1170,7 @@ void main()
                     quadUVbuff[pos++] = 0;
                 }
 
-                pos = quadBufferPos << 2;
+                pos = quadBufferPos * 4;
                 quadTexIDbuff[pos++] = pressed;
                 quadTexIDbuff[pos++] = pressed;
                 quadTexIDbuff[pos++] = pressed;
@@ -1506,10 +1433,9 @@ void main()
             quadBufferPos = 0;
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         bool isBlackNote(int n)
         {
-            n %= 12;
+            n = n % 12;
             return n == 1 || n == 3 || n == 6 || n == 8 || n == 10;
         }
 
@@ -1518,7 +1444,7 @@ void main()
             if (NoteColors == null) return;
             var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(NoteColors.Length);
 
-            /* for (int i = 0; i < NoteColors.Length; i++)
+            for (int i = 0; i < NoteColors.Length; i++)
             {
                 for (int j = 0; j < NoteColors[i].Length; j++)
                 {
@@ -1528,22 +1454,6 @@ void main()
                         NoteColors[i][j].right = cols[i * 32 + j * 2 + 1];
                     }
                 }
-            }*/
-            int IndexOfI = 0;
-            int IndexOfJ;
-            foreach (var i in NoteColors)
-            {
-                IndexOfJ = 0;
-                foreach (var j in i)
-                {
-                    if (j.isDefault)
-                    {
-                        j.left = cols[(IndexOfI << 5) + (IndexOfJ * 2)];
-                        j.right = cols[(IndexOfI << 5) + (IndexOfJ * 2) + 1];
-                    }
-                    ++IndexOfJ;
-                }
-                ++IndexOfI;
             }
         }
     }

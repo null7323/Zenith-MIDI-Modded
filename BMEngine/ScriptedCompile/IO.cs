@@ -303,25 +303,10 @@ namespace ScriptedEngine
                         wdth = options.blackKeyScale;
                         int bknum = layout.keyNumber[i] % 5;
                         double offset = wdth / 2;
-                        /*if (bknum == 0) offset += wdth * 0.5 * options.blackKey2setOffset;
-                        if (bknum == 2) offset += wdth * 0.5 * options.blackKey3setOffset;
-                        if (bknum == 1) offset -= wdth * 0.5 * options.blackKey2setOffset;
-                        if (bknum == 4) offset -= wdth * 0.5 * options.blackKey3setOffset;*/
-                        switch (bknum)
-                        {
-                            case 0:
-                                offset += wdth / 2 * options.blackKey2setOffset;
-                                break;
-                            case 2:
-                                offset += wdth / 2 * options.blackKey3setOffset;
-                                break;
-                            case 1:
-                                offset -= wdth / 2 * options.blackKey2setOffset;
-                                break;
-                            case 4:
-                                offset -= wdth / 2 * options.blackKey3setOffset;
-                                break;
-                        }
+                        if (bknum == 0) offset += wdth / 2 * options.blackKey2setOffset;
+                        if (bknum == 2) offset += wdth / 2 * options.blackKey3setOffset;
+                        if (bknum == 1) offset -= wdth / 2 * options.blackKey2setOffset;
+                        if (bknum == 4) offset -= wdth / 2 * options.blackKey3setOffset;
 
                         offset -= options.advancedBlackKeyOffsets[layout.keyNumber[i] % 5] * wdth / 2;
 
@@ -329,25 +314,10 @@ namespace ScriptedEngine
                         widthArrayKeys[i] = wdth;
 
                         offset -= wdth / 2 * (1 - options.blackNoteScale);
-                        /*if (bknum == 0) offset += wdth * 0.5 * options.blackNote2setOffset;
-                        if (bknum == 2) offset += wdth * 0.5 * options.blackNote3setOffset;
-                        if (bknum == 1) offset -= wdth * 0.5 * options.blackNote2setOffset;
-                        if (bknum == 4) offset -= wdth * 0.5 * options.blackNote3setOffset;*/
-                        switch (bknum)
-                        {
-                            case 0:
-                                offset += wdth / 2 * options.blackNote2setOffset;
-                                break;
-                            case 2:
-                                offset += wdth / 2 * options.blackNote3setOffset;
-                                break;
-                            case 1:
-                                offset -= wdth / 2 * options.blackNote2setOffset;
-                                break;
-                            case 4:
-                                offset -= wdth / 2 * options.blackNote3setOffset;
-                                break;
-                        }
+                        if (bknum == 0) offset += wdth / 2 * options.blackNote2setOffset;
+                        if (bknum == 2) offset += wdth / 2 * options.blackNote3setOffset;
+                        if (bknum == 1) offset -= wdth / 2 * options.blackNote2setOffset;
+                        if (bknum == 4) offset -= wdth / 2 * options.blackNote3setOffset;
                         wdth *= options.blackNoteScale;
 
                         leftArrayNotes[i] = layout.keyNumber[_i] - offset;

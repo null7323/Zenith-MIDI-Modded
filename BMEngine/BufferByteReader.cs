@@ -10,6 +10,7 @@ namespace ZenithEngine
 {
     public class BufferByteReader
     {
+        long pos;
         int buffersize;
         int bufferpos;
         int maxbufferpos;
@@ -29,7 +30,7 @@ namespace ZenithEngine
             this.stream = stream;
             buffer = new byte[buffersize];
             bufferNext = new byte[buffersize];
-            UpdateBuffer(Location, true);
+            UpdateBuffer(pos, true);
         }
 
         void UpdateBuffer(long pos, bool first = false)
@@ -64,9 +65,9 @@ namespace ZenithEngine
             maxbufferpos = (int)Math.Min(streamlen - pos + 1, buffersize);
         }
 
-        public long Location { get; private set; }
+        public long Location => pos;
 
-        public int Pushback { get; set; } = -1;
+        public int Pushback = -1;
 
         public byte Read()
         {
@@ -80,9 +81,9 @@ namespace ZenithEngine
             if (bufferpos < maxbufferpos) return b;
             else if (bufferpos >= buffersize)
             {
-                Location += bufferpos;
+                pos += bufferpos;
                 bufferpos = 0;
-                UpdateBuffer(Location);
+                UpdateBuffer(pos);
                 return b;
             }
             else throw new IndexOutOfRangeException();
@@ -94,9 +95,9 @@ namespace ZenithEngine
             if (bufferpos < maxbufferpos) return b;
             else if (bufferpos >= buffersize)
             {
-                Location += bufferpos;
+                pos += bufferpos;
                 bufferpos = 0;
-                UpdateBuffer(Location);
+                UpdateBuffer(pos);
                 return b;
             }
             else throw new IndexOutOfRangeException();
@@ -104,28 +105,27 @@ namespace ZenithEngine
 
         public void Reset()
         {
-            Location = 0;
+            pos = 0;
             bufferpos = 0;
-            UpdateBuffer(Location, true);
+            UpdateBuffer(pos, true);
         }
 
         public void Skip(int count)
         {
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < count; i++)
             {
-                /*if(Pushback != -1)
+                if(Pushback != -1)
                 {
                     Pushback = -1;
                     continue;
                 }
-                */ // not found in Zenith 1
-                ++bufferpos;
+                bufferpos++;
                 if (bufferpos < maxbufferpos) continue;
                 if (bufferpos >= buffersize)
                 {
-                    Location += bufferpos;
+                    pos += bufferpos;
                     bufferpos = 0;
-                    UpdateBuffer(Location);
+                    UpdateBuffer(pos);
                 }
                 else throw new IndexOutOfRangeException();
             }

@@ -30,7 +30,6 @@ namespace PFARender
             remove { paletteList.PaletteChanged -= value; }
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void SetValues()
         {
             firstNote.Value = settings.firstNote;
@@ -41,11 +40,10 @@ namespace PFARender
             sameWidth.IsChecked = settings.sameWidthNotes;
             //topColorSelect.SelectedIndex = (int)settings.topColor;
             middleCSquare.IsChecked = settings.middleC;
-            // blackNotesAbove.IsChecked = settings.blackNotesAbove;
+            blackNotesAbove.IsChecked = settings.blackNotesAbove;
             paletteList.SelectImage(settings.palette);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public SettingsCtrl(Settings settings) : base()
         {
             InitializeComponent();
@@ -56,7 +54,6 @@ namespace PFARender
             SetValues();
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void Nud_ValueChanged(object sender, RoutedPropertyChangedEventArgs<decimal> e)
         {
             if (settings == null) return;
@@ -67,7 +64,6 @@ namespace PFARender
             if (sender == borderWidth) settings.borderWidth = (double)borderWidth.Value;
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void NoteDeltaScreenTime_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
@@ -90,11 +86,10 @@ namespace PFARender
             SetValues();
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void SameWidth_Checked(object sender, RoutedEventArgs e)
         {
             if (settings == null) return;
-            settings.sameWidthNotes = sameWidth.IsChecked;
+            settings.sameWidthNotes = (bool)sameWidth.IsChecked;
         }
 
         //private void TopColorSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -106,21 +101,18 @@ namespace PFARender
         //    catch (NullReferenceException) { }
         //}
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void MiddleCSquare_Checked(object sender, RoutedEventArgs e)
         {
             if (settings == null) return;
-            settings.middleC = middleCSquare.IsChecked;
+            settings.middleC = (bool)middleCSquare.IsChecked;
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void BlackNotesAbove_Checked(object sender, RoutedEventArgs e)
         {
             if (settings == null) return;
-            settings.blackNotesAbove = blackNotesAbove.IsChecked;
+            settings.blackNotesAbove = (bool)blackNotesAbove.IsChecked;
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private void BarColorHex_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (settings == null) return;

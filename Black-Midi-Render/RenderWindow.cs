@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -12,10 +17,11 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.Text.RegularExpressions;
 using System.Drawing.Imaging;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
-using System.Collections.Generic;
 
 namespace Zenith_MIDI
 {
@@ -56,7 +62,7 @@ void main()
     UV = vec2(position.x, position.y);
 }
 ";
-        /*const string postShaderFrag = @"#version 330 compatibility
+        const string postShaderFrag = @"#version 330 compatibility
 
 in vec2 UV;
 
@@ -69,19 +75,6 @@ void main()
     color = texture2D( TextureSampler, UV );
     color.a = sqrt(color.a);
     color.rgb /= color.a;
-}
-";*/
-        const string postShaderFrag = @"#version 330 compatibility
-
-in vec2 UV;
-
-out vec4 color;
-
-uniform sampler2D TextureSampler;
-
-void main()
-{
-    color = texture2D( TextureSampler, UV );
 }
 ";
         const string postShaderFragDownscale = @"#version 330 compatibility
@@ -142,7 +135,7 @@ void main()
     color.w = 1;
 }
 ";
-        /*const string postShaderFragBlackFill = @"#version 330 compatibility
+        const string postShaderFragBlackFill = @"#version 330 compatibility
 
 in vec2 UV;
 
@@ -154,19 +147,20 @@ void main()
 {
     color = vec4( 0,0,0,1 );
 }
-";*/
+";
 
 
         int MakeShader(string vert, string frag)
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
+            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, vert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, frag);
@@ -242,7 +236,7 @@ void main()
         int postShaderDownscale;
         int postShaderMask;
         int postShaderMaskColor;
-        // int postShaderBlackFill;
+        int postShaderBlackFill;
 
         int uDownscaleRes;
         int uDownscaleFac;
@@ -259,46 +253,25 @@ void main()
         {
             Process ffmpeg = new Process();
             string args = "-hide_banner";
-            if (settings.includeAudio)
+            /*if (settings.includeAudio)
             {
-                if (settings.encoder == "png")
-                {
-                    MessageBox.Show("Invalid encoder: Cannot Include Audio\n不正确的编码器将导致无法添加声音.\nSettings encoder to libx264...\n" +
-                        "将编码器设置至libx264");
-                    settings.encoder = "libx264";
-                }
-                double fstep = midi.division / lastTempo * (1000000 / settings.fps);
+                double fstep = ((double)midi.division / lastTempo) * (1000000 / settings.fps);
                 double offset = -midiTime / fstep / settings.fps;
                 offset = Math.Round(offset * 100) / 100;
-
                 args = "" +
-                " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
-                " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
-                " -itsoffset " + offset.ToString().Replace(",", ".") + " -i \"" + settings.audioPath + "\"" +
-                " -vf vflip -vcodec " + settings.encoder + " -pix_fmt yuv" + settings.yuvcode + " -acodec aac -filter_threads " + 
-                settings.threadsForRender;
-
+                    " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
+                    " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
+                    " -itsoffset " + offset.ToString().Replace(",", ".") + " -i \"" + settings.audioPath + "\"" + " -vf vflip -pix_fmt yuv420p ";
+                args += settings.CustomFFmpeg ? "" : "-vcodec libx264 -acodec aac";
             }
             else
             {
-                if (settings.encoder == "png")
-                {
-                    args = "" +
-                       " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
-                       " -strict -2" +
-                       " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
-                       " -vf vflip -vcodec " + settings.encoder + " -filter_threads " +
-                       settings.threadsForRender;
-                }
-                else
-                {
-                    args = "" +
-                       " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
-                       " -strict -2" +
-                       " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
-                       " -vf vflip -vcodec " + settings.encoder + " -pix_fmt yuv" + settings.yuvcode + " -filter_threads " +
-                       settings.threadsForRender;
-                }
+                args = "" +
+                    " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
+                    " -strict -2" +
+                    " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
+                    " -vf vflip -pix_fmt yuv420p ";
+                args += settings.CustomFFmpeg ? "" : "-vcodec libx264";
             }
             if (settings.useBitrate)
             {
@@ -306,39 +279,118 @@ void main()
                     " -maxrate " + settings.bitrate + "k" +
                     " -minrate " + settings.bitrate + "k";
             }
+            else if (settings.CustomFFmpeg)
+            {
+                args += settings.ffoption;
+            }
             else
             {
-                if (settings.encoder.Contains("nvenc"))
+                args += " -preset " + settings.crfPreset + " -crf " + settings.crf;
+            }*/
+            if (settings.CustomFFmpeg)
+            {
+                if (settings.includeAudio)
                 {
-                    switch (settings.crfPreset)
+                    double fstep = ((double)midi.division / lastTempo) * (1000000 / settings.fps);
+                    double offset = -midiTime / fstep / settings.fps;
+                    offset = Math.Round(offset * 100) / 100;
+                    args = "" +
+                        " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
+                        " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
+                        " -itsoffset " + offset.ToString().Replace(",", ".") + " -i \"" + settings.audioPath + "\"" + " -vf vflip -pix_fmt yuv420p ";
+                }
+                else
+                {
+                    args = "" +
+                        " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
+                        " -strict -2" +
+                        " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
+                        " -vf vflip -pix_fmt yuv420p ";
+                }
+                args += settings.ffoption;
+            }
+            else
+            {
+                if (settings.includeAudio)
+                {
+                    if (settings.encoder == "png")
                     {
-                        case "ultrafast":
-                            MessageBox.Show("Error: Hardware Encoder DOES NOT support 'ultrafast'\n硬件编码器不支持ultrafast参数\nWill use argument 'fast'\n将使用fast参数");
-                            args += " -preset:v fast -crf " + settings.crf;
-                            break;
-                        case "superfast":
-                            MessageBox.Show("Error: Hardware Encoder DOES NOT support 'superfast'\n硬件编码器不支持superfast参数\nWill use argument 'fast'\n将使用fast参数");
-                            args += " -preset:v fast -crf " + settings.crf;
-                            break;
-                        case "veryfast":
-                            MessageBox.Show("Error: Hardware Encoder DOES NOT support 'veryfast'\n硬件编码器不支持veryfast参数\nWill use argument 'fast'\n将使用fast参数");
-                            args += " -preset:v fast -crf " + settings.crf;
-                            break;
-                        case "faster":
-                            MessageBox.Show("Error: Hardware Encoder DOES NOT support 'faster'\n硬件编码器不支持faster参数\nWill use argument 'fast'\n将使用fast参数");
-                            args += " -preset:v fast -crf " + settings.crf;
-                            break;
-                        case "slower":
-                            MessageBox.Show("Error: Hardware Encoder DOES NOT support 'slower'\n硬件编码器不支持slower参数\nWill use argument 'slower'\n将使用fast参数");
-                            args += " -preset:v fast -crf " + settings.crf;
-                            break;
-                        case "veryslow":
-                            MessageBox.Show("Error: Hardware Encoder DOES NOT support 'veryslow'\n硬件编码器不支持veryslow参数\nWill use argument 'fast'\n将使用fast参数");
-                            args += " -preset:v fast -crf " + settings.crf;
-                            break;
-                        default:
-                            args += " -preset:v " + settings.crfPreset + " -crf " + settings.crf;
-                            break;
+                        MessageBox.Show("Error: PNG Encoder could not render video with audio.", "Invalid Encoder");
+                        settings.ffRender = false;
+                        return ffmpeg;
+                    }
+                    double fstep = midi.division / lastTempo * (1000000 / settings.fps);
+                    double offset = -midiTime / fstep / settings.fps;
+                    offset = Math.Round(offset * 100) / 100;
+
+                    args = "" +
+                    " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
+                    " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
+                    " -itsoffset " + offset.ToString().Replace(",", ".") + " -i \"" + settings.audioPath + "\"" +
+                    " -vf vflip -vcodec " + settings.encoder + " -pix_fmt yuv" + settings.yuvcode + " -acodec aac";
+                    if (settings.useFilterThreads) args += " -filter_threads " + settings.filterThreadsForRender;
+                }
+                else
+                {
+                    if (settings.encoder == "png")
+                    {
+                        args = "" +
+                           " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
+                           " -strict -2" +
+                           " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
+                           " -vf vflip -vcodec " + settings.encoder;
+                        if (settings.useFilterThreads) args += " -filter_threads " + settings.filterThreadsForRender;
+                    }
+                    else
+                    {
+                        args = "" +
+                           " -f rawvideo -s " + settings.width / settings.downscale + "x" + settings.height / settings.downscale +
+                           " -strict -2" +
+                           " -pix_fmt rgb32 -r " + settings.fps + " -i -" +
+                           " -vf vflip -vcodec " + settings.encoder + " -pix_fmt yuv" + settings.yuvcode;
+                        if (settings.useFilterThreads) args += " -filter_threads " + settings.filterThreadsForRender;
+                    }
+                    if (settings.useBitrate)
+                    {
+                        args += " -b:v " + settings.bitrate + "k" +
+                            " -maxrate " + settings.bitrate + "k" +
+                            " -minrate " + settings.bitrate + "k";
+                    }
+                    else
+                    {
+                        if (settings.encoder.Contains("nvenc"))
+                        {
+                            switch (settings.crfPreset)
+                            {
+                                case "ultrafast":
+                                    MessageBox.Show("Error: Hardware Encoder DOES NOT support 'ultrafast'\n硬件编码器不支持ultrafast参数\nWill use argument 'fast'\n将使用fast参数");
+                                    args += " -preset:v fast -crf " + settings.crf;
+                                    break;
+                                case "superfast":
+                                    MessageBox.Show("Error: Hardware Encoder DOES NOT support 'superfast'\n硬件编码器不支持superfast参数\nWill use argument 'fast'\n将使用fast参数");
+                                    args += " -preset:v fast -crf " + settings.crf;
+                                    break;
+                                case "veryfast":
+                                    MessageBox.Show("Error: Hardware Encoder DOES NOT support 'veryfast'\n硬件编码器不支持veryfast参数\nWill use argument 'fast'\n将使用fast参数");
+                                    args += " -preset:v fast -crf " + settings.crf;
+                                    break;
+                                case "faster":
+                                    MessageBox.Show("Error: Hardware Encoder DOES NOT support 'faster'\n硬件编码器不支持faster参数\nWill use argument 'fast'\n将使用fast参数");
+                                    args += " -preset:v fast -crf " + settings.crf;
+                                    break;
+                                case "slower":
+                                    MessageBox.Show("Error: Hardware Encoder DOES NOT support 'slower'\n硬件编码器不支持slower参数\nWill use argument 'slower'\n将使用fast参数");
+                                    args += " -preset:v fast -crf " + settings.crf;
+                                    break;
+                                case "veryslow":
+                                    MessageBox.Show("Error: Hardware Encoder DOES NOT support 'veryslow'\n硬件编码器不支持veryslow参数\nWill use argument 'fast'\n将使用fast参数");
+                                    args += " -preset:v fast -crf " + settings.crf;
+                                    break;
+                                default:
+                                    args += " -preset:v " + settings.crfPreset + " -crf " + settings.crf;
+                                    break;
+                            }
+                        }
                     }
                 }
             }
@@ -352,6 +404,7 @@ void main()
             try
             {
                 ffmpeg.Start();
+                // if (ffmpeg.PriorityClass != ProcessPriorityClass.High) ffmpeg.PriorityClass = ProcessPriorityClass.High;
                 if (!settings.ffmpegDebug)
                 {
                     Console.OpenStandardOutput();
@@ -387,7 +440,6 @@ void main()
             return ffmpeg;
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
@@ -397,8 +449,9 @@ void main()
         // GLTextEngine textEngine;
         public RenderWindow(CurrentRendererPointer renderer, MidiFile midi, RenderSettings settings) : base(16, 9, new GraphicsMode(new ColorFormat(8, 8, 8, 8)), "Render", GameWindowFlags.Default, DisplayDevice.Default)
         {
-            // Width = (int)(DisplayDevice.Default.Width / 1.5);
-            // Height = Width / settings.width * settings.height;
+            if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            //Width = (int)(DisplayDevice.Default.Width / 1.5);
+            //Height = (int)((double)Width / settings.width * settings.height);
             Width = settings.preview_width;
             Height = settings.preview_height;
             Location = new Point((DisplayDevice.Default.Width - Width) / 2, (DisplayDevice.Default.Height - Height) / 2);
@@ -408,12 +461,10 @@ void main()
             lastTempo = midi.zerothTempo;
             lock (render)
             {
-                // render.renderer.Tempo = 60000000.0 / midi.zerothTempo;
-                render.renderer.LastMidiTimePerTick = (double)midi.zerothTempo / midi.division;
+                render.renderer.Tempo = 60000000.0 / midi.zerothTempo;
                 midiTime = -render.renderer.NoteScreenTime;
                 if (settings.timeBasedNotes) tempoFrameStep = 1000.0 / settings.fps;
-                // else tempoFrameStep = (midi.division / lastTempo) * (1000000 / settings.fps);
-                else tempoFrameStep = midi.division * 1000000 / (lastTempo * settings.fps);
+                else tempoFrameStep = (midi.division / lastTempo) * (1000000 / settings.fps);
                 midiTime -= tempoFrameStep * settings.renderSecondsDelay * settings.fps;
             }
 
@@ -443,25 +494,23 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, screenQuadBuffer);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(screenQuadArray.Length << 3),
+                (IntPtr)(screenQuadArray.Length * 8),
                 screenQuadArray,
                 BufferUsageHint.StaticDraw);
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, screenQuadIndexBuffer);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
-                (IntPtr)(screenQuadArrayIndex.Length << 2),
+                (IntPtr)(screenQuadArrayIndex.Length * 4),
                 screenQuadArrayIndex,
                 BufferUsageHint.StaticDraw);
 
-            
             postShader = MakeShader(postShaderVert, postShaderFrag);
             postShaderFlip = MakeShader(postShaderFlipVert, postShaderFrag);
             postShaderMask = MakeShader(postShaderVert, postShaderFragAlphaMask);
             postShaderMaskColor = MakeShader(postShaderVert, postShaderFragAlphaMaskColor);
             postShaderDownscale = MakeShader(postShaderVert, postShaderFragDownscale);
-            // postShaderBlackFill = MakeShader(postShaderVert, postShaderFragBlackFill);
-            
+            postShaderBlackFill = MakeShader(postShaderVert, postShaderFragBlackFill);
 
             uDownscaleRes = GL.GetUniformLocation(postShaderDownscale, "res");
             uDownscaleFac = GL.GetUniformLocation(postShaderDownscale, "factor");
@@ -471,6 +520,7 @@ void main()
         bool playbackLoopStarted = false;
         void PlaybackLoop()
         {
+            // if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
             PlaybackEvent pe;
             int timeJump;
             long now;
@@ -490,7 +540,7 @@ void main()
                 }
                 try
                 {
-                    // if (globalPlaybackEvents.ZeroLen) continue;
+                    if (globalPlaybackEvents.ZeroLen) continue;
                     pe = globalPlaybackEvents.Pop();
                     now = DateTime.Now.Ticks;
                     if (now - 10000000 > frameStartTime)
@@ -503,7 +553,11 @@ void main()
                     if (timeJump > 0)
                         Thread.Sleep(timeJump);
                     if (settings.playSound && settings.playbackEnabled)
-                        KDMAPI.SendDirectData((uint)pe.val);
+                        try
+                        {
+                            KDMAPI.SendDirectData((uint)pe.val);
+                        }
+                        catch { continue; }
                 }
                 catch { continue; }
             }
@@ -519,11 +573,15 @@ void main()
         long lastBGChangeTime = -1;
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            Task.Factory.StartNew(() => PlaybackLoop(), TaskCreationOptions.LongRunning);
+            // if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            // Task.Factory.StartNew(() => PlaybackLoop(), TaskCreationOptions.LongRunning);
+            var PlaybackLoopTask = new Task(() => PlaybackLoop(), TaskCreationOptions.LongRunning);
+            PlaybackLoopTask.Start();
+            
             SpinWait.SpinUntil(() => playbackLoopStarted);
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            if (!settings.timeBasedNotes) tempoFrameStep = midi.division / lastTempo * (1000000.0 / settings.fps);
+            if (!settings.timeBasedNotes) tempoFrameStep = (midi.division / lastTempo) * (1000000.0 / settings.fps);
             lock (render)
             {
                 lastDeltaTimeOnScreen = render.renderer.NoteScreenTime;
@@ -549,7 +607,6 @@ void main()
                         else
                         {
                             if (bgTexID == -1) bgTexID = GL.GenTexture();
-                            //loadImage(settings.BGImage, bgTexID, false, true);
                             try
                             {
                                 loadImage(new Bitmap(settings.BGImage), bgTexID, false, true);
@@ -589,11 +646,8 @@ void main()
                             if (!render.renderer.Initialized)
                             {
                                 render.renderer.Init();
-                                // render.renderer.NoteColors = midi.tracks.Select(t => t.trkColors).ToArray();
-                                List<NoteColor[]> trkColors = new List<NoteColor[]>();
-                                // render.renderer.ReloadTrackColors();
-                                foreach (var t in midi.tracks) trkColors.Add(t.trkColors);
-                                render.renderer.SetTrackColors(trkColors.ToArray());
+                                render.renderer.NoteColors = midi.tracks.Select(t => t.trkColors).ToArray();
+                                render.renderer.ReloadTrackColors();
                                 if (firstRenderer)
                                 {
                                     firstRenderer = false;
@@ -608,14 +662,12 @@ void main()
                                     }
                                 }
                             }
-                            // render.renderer.Tempo = 60000000.0 / lastTempo;
-                            render.renderer.LastMidiTimePerTick = lastTempo / midi.division;
+                            render.renderer.Tempo = 60000000.0 / lastTempo;
                             lastDeltaTimeOnScreen = render.renderer.NoteScreenTime;
                             if (settings.timeBasedNotes)
-                                // SpinWait.SpinUntil(() => midi.currentFlexSyncTime > midiTime + lastDeltaTimeOnScreen + tempoFrameStep * settings.tempoMultiplier || midi.unendedTracks == 0 || !settings.running);
-                                SpinWait.SpinUntil(() => (long)((midi.currentSyncTime - midi.lastTempoTick) / midi.tempoTickMultiplier + midi.lastTempoTime) > midiTime + lastDeltaTimeOnScreen + tempoFrameStep || midi.unendedTracks == 0 || !settings.running);
+                                SpinWait.SpinUntil(() => (midi.currentFlexSyncTime > midiTime + lastDeltaTimeOnScreen + tempoFrameStep * settings.tempoMultiplier || midi.unendedTracks == 0) || !settings.running);
                             else
-                                SpinWait.SpinUntil(() => midi.currentSyncTime > midiTime + lastDeltaTimeOnScreen + tempoFrameStep * settings.tempoMultiplier || midi.unendedTracks == 0 || !settings.running);
+                                SpinWait.SpinUntil(() => (midi.currentSyncTime > midiTime + lastDeltaTimeOnScreen + tempoFrameStep * settings.tempoMultiplier || midi.unendedTracks == 0) || !settings.running);
                             if (!settings.running) break;
 
                             render.renderer.RenderFrame(globalDisplayNotes, midiTime, finalCompositeBuff.BufferID);
@@ -638,7 +690,7 @@ void main()
                         mv = settings.fps / 4;
                 }
                 lastMV = mv;
-                /*if (!settings.Paused)
+                if (!settings.Paused)
                 {
                     lock (globalTempoEvents)
                     {
@@ -650,37 +702,15 @@ void main()
                                 Console.WriteLine("Zero tempo event encountered, ignoring");
                                 continue;
                             }
-                            var _t = (t.pos - midiTime) / (tempoFrameStep * mv * settings.tempoMultiplier);
+                            var _t = ((t.pos) - midiTime) / (tempoFrameStep * mv * settings.tempoMultiplier);
                             mv *= 1 - _t;
-                            if (!settings.timeBasedNotes) tempoFrameStep = (double)midi.division / t.tempo * (1000000.0 / settings.fps);
+                            if (!settings.timeBasedNotes) tempoFrameStep = ((double)midi.division / t.tempo) * (1000000.0 / settings.fps);
                             lastTempo = t.tempo;
                             midiTime = t.pos;
                         }
                     }
                     midiTime += mv * tempoFrameStep * settings.tempoMultiplier;
-                }*/
-                lock (globalTempoEvents)
-                {
-                    while (globalTempoEvents.First != null && midiTime + (tempoFrameStep * mv * settings.tempoMultiplier) > globalTempoEvents.First.pos)
-                    {
-                        var t = globalTempoEvents.Pop();
-                        if (t.tempo == 0)
-                        {
-                            Console.WriteLine("Zero tempo event encountered, ignoring");
-                            continue;
-                        }
-                        var _t = (t.pos - midiTime) / (tempoFrameStep * mv * settings.tempoMultiplier);
-                        mv *= 1 - _t;
-                        if (!settings.timeBasedNotes) tempoFrameStep = (double)midi.division / t.tempo * (1000000.0 / settings.fps);
-                        lastTempo = t.tempo;
-                        midiTime = t.pos;
-                    }
                 }
-                if (!settings.Paused)
-                {
-                    midiTime += mv * tempoFrameStep * settings.tempoMultiplier;
-                }
-                // 我是分割线
                 frameStartTime = DateTime.Now.Ticks;
                 if (settings.timeBasedNotes) microsecondsPerTick = 10000;
                 else microsecondsPerTick = (long)(lastTempo / midi.division * 10);
@@ -693,25 +723,30 @@ void main()
                     {
                         if (c.channel == 0x7F)
                         {
-                            foreach (var trkColor in c.track.trkColors)
-                            {
-                                trkColor.left = c.col1;
-                                trkColor.right = c.col2;
-                                // trkColor.isDefault = false;
-                            }
-                            /*
-                            for (int i = 0; i < 16; i++)
+                            for (int i = 0; i < 16; ++i)
                             {
                                 c.track.trkColors[i].left = c.col1;
                                 c.track.trkColors[i].right = c.col2;
                                 c.track.trkColors[i].isDefault = false;
-                            }*/
+                                ++i;
+                                c.track.trkColors[i].left = c.col1;
+                                c.track.trkColors[i].right = c.col2;
+                                c.track.trkColors[i].isDefault = false;
+                                ++i;
+                                c.track.trkColors[i].left = c.col1;
+                                c.track.trkColors[i].right = c.col2;
+                                c.track.trkColors[i].isDefault = false;
+                                ++i;
+                                c.track.trkColors[i].left = c.col1;
+                                c.track.trkColors[i].right = c.col2;
+                                c.track.trkColors[i].isDefault = false;
+                            }
                         }
                         else
                         {
                             c.track.trkColors[c.channel].left = c.col1;
                             c.track.trkColors[c.channel].right = c.col2;
-                            // c.track.trkColors[c.channel].isDefault = false;
+                            c.track.trkColors[c.channel].isDefault = false;
                         }
                     }
                 }
@@ -742,6 +777,15 @@ void main()
 
                 if (settings.ffRender)
                 {
+                    if (ffmpegvideo.HasExited || (settings.ffRenderMask && ffmpegmask.HasExited))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("FFMPEG process closed unexpectedly!");
+                        Console.WriteLine("Use 'ffmpeg debug' for more advanced info.");
+                        Console.ResetColor();
+                        settings.running = false;
+                    }
+
                     if (!settings.ffRenderMask)
                         GL.UseProgram(postShader);
                     else
@@ -785,23 +829,15 @@ void main()
                     }
                 }
 
-                /*GLPostbuffer.UnbindBuffers();
-                GL.Clear(ClearBufferMask.ColorBufferBit);
-                // GL.UseProgram(postShaderBlackFill);
-                DrawScreenQuad();
-                GL.UseProgram(postShader);
-                GL.Viewport(0, 0, Width, Height);
-                downscaleBuff.BindTexture();
-                DrawScreenQuad();
-                GLPostbuffer.UnbindTextures();*/
-                GL.UseProgram(postShader);
                 GLPostbuffer.UnbindBuffers();
                 GL.Clear(ClearBufferMask.ColorBufferBit);
+                GL.UseProgram(postShaderBlackFill);
+                DrawScreenQuad();
+                GL.UseProgram(postShader);
                 GL.Viewport(0, 0, Width, Height);
                 downscaleBuff.BindTexture();
                 DrawScreenQuad();
                 GLPostbuffer.UnbindTextures();
-                // just test
                 if (settings.ffRender) VSync = VSyncMode.Off;
                 else if (settings.vsync) VSync = VSyncMode.On;
                 else VSync = VSyncMode.Off;
@@ -853,7 +889,7 @@ void main()
                 }
             }
             catch (InvalidOperationException) { }
-            // Console.WriteLine("Disposed of renderers");
+            Console.WriteLine("Disposed of renderers");
 
             globalDisplayNotes = null;
             globalTempoEvents = null;
@@ -885,9 +921,9 @@ void main()
 
             midi = null;
             render = null;
-            // Console.WriteLine("Closing window");
+            Console.WriteLine("Closing window");
 
-            Close();
+            this.Close();
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -907,7 +943,7 @@ void main()
                         double timeSkipped = 0;
                         for (; timeSkipped < skip; ++midiTime)
                         {
-                            midi.ParseUpTo((long)midiTime);
+                            midi.ParseUpTo(midiTime);
                             timeSkipped += 1 / midi.tempoTickMultiplier;
                         }
                     }

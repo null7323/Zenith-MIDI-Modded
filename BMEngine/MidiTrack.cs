@@ -51,8 +51,8 @@ namespace ZenithEngine
 
     public class TimeSignature
     {
-        public int numerator /*{ get; internal set; }*/;
-        public int denominator /*{ get; internal set; }*/;
+        public int numerator { get; internal set; }
+        public int denominator { get; internal set; }
     }
 
     public class MidiTrack : IDisposable
@@ -62,13 +62,12 @@ namespace ZenithEngine
         public bool trackEnded = false;
 
         public long trackTime = 0;
-        //public long lastStepTime = 0;
-        //public double trackFlexTime = 0;
-        public long prevTrackTime = 0;
+        public long lastStepTime = 0;
+        public double trackFlexTime = 0;
         public long noteCount = 0;
         public int zerothTempo = -1;
 
-        public byte channelPrefix = 0;
+        byte channelPrefix = 0;
 
         MidiFile midi;
 
@@ -95,9 +94,8 @@ namespace ZenithEngine
             reader.Reset();
             ResetColors();
             trackTime = 0;
-            //lastStepTime = 0;
-            //trackFlexTime = 0;
-            prevTrackTime = 0;
+            lastStepTime = 0;
+            trackFlexTime = 0;
             trackEnded = false;
             readDelta = false;
             channelPrefix = 0;
@@ -116,23 +114,13 @@ namespace ZenithEngine
 
         public void SetZeroColors()
         {
-            /*for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 16; i++)
             {
                 if (zeroTickTrkColors[i] != null)
                 {
                     trkColors[i].left = zeroTickTrkColors[i].left;
                     trkColors[i].right = zeroTickTrkColors[i].right;
                 }
-            }*/
-            int _Index = 0;
-            foreach (var i in trkColors)
-            {
-                if (zeroTickTrkColors[_Index] != null)
-                {
-                    i.left = zeroTickTrkColors[_Index].left;
-                    i.right = zeroTickTrkColors[_Index].right;
-                }
-                ++_Index;
             }
         }
 
@@ -157,7 +145,7 @@ namespace ZenithEngine
         {
             byte c;
             int val = 0;
-            /*for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 c = reader.ReadFast();
                 if (c > 0x7F)
@@ -169,46 +157,6 @@ namespace ZenithEngine
                     val = val << 7 | c;
                     return val;
                 }
-            }*/
-            c = reader.ReadFast();
-            if (c > 0x7F)
-            {
-                val = (val << 7) | (c & 0x7F);
-            }
-            else
-            {
-                val = val << 7 | c;
-                return val;
-            }
-            c = reader.ReadFast();
-            if (c > 0x7F)
-            {
-                val = (val << 7) | (c & 0x7F);
-            }
-            else
-            {
-                val = val << 7 | c;
-                return val;
-            }
-            c = reader.ReadFast();
-            if (c > 0x7F)
-            {
-                val = (val << 7) | (c & 0x7F);
-            }
-            else
-            {
-                val = val << 7 | c;
-                return val;
-            }
-            c = reader.ReadFast();
-            if (c > 0x7F)
-            {
-                val = (val << 7) | (c & 0x7F);
-            }
-            else
-            {
-                val = val << 7 | c;
-                return val;
             }
             return val;
         }
@@ -216,8 +164,8 @@ namespace ZenithEngine
         public void Step(long time)
         {
             timebase = settings.timeBasedNotes;
-            //trackFlexTime += (time - lastStepTime) / midi.tempoTickMultiplier;
-            //lastStepTime = time;
+            trackFlexTime += (time - lastStepTime) / midi.tempoTickMultiplier;
+            lastStepTime = time;
             try
             {
                 if (time >= trackTime)
@@ -255,7 +203,8 @@ namespace ZenithEngine
                 foreach (var un in UnendedNotes)
                 {
                     var iter = un.Iterate();
-                    while (iter.MoveNext(out Note n))
+                    Note n;
+                    while (iter.MoveNext(out n))
                     {
                         n.end = trackTime;
                         n.hasEnded = true;
@@ -279,7 +228,7 @@ namespace ZenithEngine
 
                 double time = trackTime;
                 if (timebase)
-                    time = (long)((time - midi.lastTempoTick) / midi.tempoTickMultiplier + midi.lastTempoTime);
+                    time = trackFlexTime;
 
                 byte command = reader.ReadFast();
                 if (command < 0x80)
@@ -289,7 +238,6 @@ namespace ZenithEngine
                 }
                 prevCommand = command;
                 byte comm = (byte)(command & 0b11110000);
-
                 if (comm == 0b10010000)
                 {
                     byte channel = (byte)(command & 0b00001111);
@@ -316,19 +264,17 @@ namespace ZenithEngine
                     }
                     else
                     {
-                        Note n = new Note
-                        {
-                            start = time,
-                            key = note,
-                            color = trkColors[channel],
-                            channel = channel,
-                            vel = vel,
-                            track = trackID
-                        };
+                        Note n = new Note();
+                        n.start = time;
+                        n.key = note;
+                        n.color = trkColors[channel];
+                        n.channel = channel;
+                        n.vel = vel;
+                        n.track = trackID;
                         if (UnendedNotes == null)
                         {
-                            UnendedNotes = new FastList<Note>[256 << 4];
-                            for (int i = 0; i < 256 << 4; ++i)
+                            UnendedNotes = new FastList<Note>[256 * 16];
+                            for (int i = 0; i < 256 * 16; i++)
                             {
                                 UnendedNotes[i] = new FastList<Note>();
                             }
@@ -473,429 +419,222 @@ namespace ZenithEngine
                 else if (command == 0xFF)
                 {
                     command = reader.Read();
-                    switch (command)
+                    if (command == 0x00)
                     {
-                        case 0x00:
-                            if (reader.Read() != 2)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Read();
-                            reader.Read();
-                            break;
-                        /*
-                        if (command == 0x00)
+                        if (reader.Read() != 2)
                         {
-                            if (reader.Read() != 2)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Read(); 
-                            reader.Read();
-                        }*/
-                        case 0x01:
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                            break;
-                        /*else if (command == 0x01)
+                            throw new Exception("Corrupt Track");
+                        }
+                        reader.Read(); 
+                        reader.Read();
+                    }
+                    else if (command == 0x01)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x02:
-                            size = (int)ReadVariableLen();
-                            text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x02)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x02)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x03:
-                            size = (int)ReadVariableLen();
-                            text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x03)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x03)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x04:
-                            size = (int)ReadVariableLen();
-                             text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x04)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x04)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x05:
-                            size = (int)ReadVariableLen();
-                            text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x05)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x05)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x06:
-                            size = (int)ReadVariableLen();
-                            text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x06)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x06)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x07:
-                            size = (int)ReadVariableLen();
-                            text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x07)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x07)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x08:
-                            size = (int)ReadVariableLen();
-                            text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x08)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x08)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x09:
-                            size = (int)ReadVariableLen();
-                            text = new char[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                text[i] = (char)reader.Read();
-                            }
-                            str = new string(text);
-                            break;
-                        /*else if (command == 0x09)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x09)
+                    {
+                        int size = (int)ReadVariableLen();
+                        char[] text = new char[size];
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = (int)ReadVariableLen();
-                            char[] text = new char[size];
-                            for (int i = 0; i < size; i++)
+                            text[i] = (char)reader.Read();
+                        }
+                        string str = new string(text);
+                    }
+                    else if (command == 0x0A)
+                    {
+                        int size = (int)ReadVariableLen();
+                        byte[] data = new byte[size];
+                        for (int i = 0; i < size; i++)
+                        {
+                            data[i] = reader.Read();
+                        }
+                        if (data.Length == 8 || data.Length == 12)
+                        {
+                            if (data[0] == 0x00 &&
+                                data[1] == 0x0F)
                             {
-                                text[i] = (char)reader.Read();
-                            }
-                            string str = new string(text);
-                        }*/
-                        case 0x0A:
-                            size = (int)ReadVariableLen();
-                            byte[] data = new byte[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                data[i] = reader.Read();
-                            }
-                            if (data.Length == 8 || data.Length == 12)
-                            {
-                                if (data[0] == 0x00 &&
-                                    data[1] == 0x0F)
+                                Color4 col1 = new Color4(data[4], data[5], data[6], data[7]);
+                                Color4 col2;
+                                if (data.Length == 12)
+                                    col2 = new Color4(data[8], data[9], data[10], data[11]);
+                                else col2 = col1;
+                                if (data[2] < 0x10 || data[2] == 0x7F)
                                 {
-                                    Color4 col1 = new Color4(data[4], data[5], data[6], data[7]);
-                                    Color4 col2;
-                                    if (data.Length == 12)
-                                        col2 = new Color4(data[8], data[9], data[10], data[11]);
-                                    else col2 = col1;
-                                    if (data[2] < 0x10 || data[2] == 0x7F)
-                                    {
-                                        var c = new ColorChange() { pos = time, col1 = col1, col2 = col2, channel = data[2], track = this };
-                                        globalColorEvents.Add(c);
-                                    }
+                                    var c = new ColorChange() { pos = time, col1 = col1, col2 = col2, channel = data[2], track = this };
+                                    globalColorEvents.Add(c);
                                 }
                             }
-                            break;
-                        /*else if (command == 0x0A)
+                        }
+                    }
+                    else if (command == 0x20)
+                    {
+                        command = reader.Read();
+                        if (command != 1)
                         {
-                            int size = (int)ReadVariableLen();
-                            byte[] data = new byte[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                data[i] = reader.Read();
-                            }
-                            if (data.Length == 8 || data.Length == 12)
-                            {
-                                if (data[0] == 0x00 &&
-                                    data[1] == 0x0F)
-                                {
-                                    Color4 col1 = new Color4(data[4], data[5], data[6], data[7]);
-                                    Color4 col2;
-                                    if (data.Length == 12)
-                                        col2 = new Color4(data[8], data[9], data[10], data[11]);
-                                    else col2 = col1;
-                                    if (data[2] < 0x10 || data[2] == 0x7F)
-                                    {
-                                        var c = new ColorChange() { pos = time, col1 = col1, col2 = col2, channel = data[2], track = this };
-                                        globalColorEvents.Add(c);
-                                    }
-                                }
-                            }
-                        }*/
-                        case 0x20:
-                            command = reader.Read();
-                            if (command != 1)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            channelPrefix = reader.Read();
-                            break;
-                        /*else if (command == 0x20)
+                            throw new Exception("Corrupt Track");
+                        }
+                        channelPrefix = reader.Read();
+                    }
+                    else if (command == 0x21)
+                    {
+                        command = reader.Read();
+                        if (command != 1)
                         {
-                            command = reader.Read();
-                            if (command != 1)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            channelPrefix = reader.Read();
-                        }*/
-                        case 0x21:
-                            command = reader.Read();
-                            if (command != 1)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(1);
-                            //TODO:  MIDI port
-                            break;
-                        /*else if (command == 0x21)
+                            throw new Exception("Corrupt Track");
+                        }
+                        reader.Skip(1);
+                        //TODO:  MIDI port
+                    }
+                    else if (command == 0x2F)
+                    {
+                        command = reader.Read();
+                        if (command != 0)
                         {
-                            command = reader.Read();
-                            if (command != 1)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(1);
-                            //TODO:  MIDI port
-                        }*/
-                        case 0x2F:
-                            command = reader.Read();
-                            if (command != 0)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            EndTrack();
-                            break;
-                        /*else if (command == 0x2F)
+                            throw new Exception("Corrupt Track");
+                        }
+                        EndTrack();
+                    }
+                    else if (command == 0x51)
+                    {
+                        command = reader.Read();
+                        if (command != 3)
                         {
-                            command = reader.Read();
-                            if (command != 0)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            EndTrack();
-                        }*/
-                        case 0x51:
-                            command = reader.Read();
-                            if (command != 3)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            int btempo = 0;
-                            /*for (int i = 0; i != 3; i++)
-                                btempo = (btempo << 8) | reader.Read();*/
-                            // removed loop
-                            btempo = (btempo << 8) | reader.Read();
-                            btempo = (btempo << 8) | reader.Read();
-                            btempo = (btempo << 8) | reader.Read();
-                            if (!timebase)
-                            {
-                                Tempo t = new Tempo
-                                {
-                                    pos = trackTime,
-                                    tempo = btempo
-                                };
+                            throw new Exception("Corrupt Track");
+                        }
+                        int btempo = 0;
+                        for (int i = 0; i != 3; i++)
+                            btempo = (int)((btempo << 8) | reader.Read());
+                        if (!timebase)
+                        {
+                            Tempo t = new Tempo();
+                            t.pos = trackTime;
+                            t.tempo = btempo;
 
-                                /*lock (globalTempoEvents)
-                                {
-                                    globalTempoEvents.Add(t);
-                                }*/
+                            lock (globalTempoEvents)
+                            {
                                 globalTempoEvents.Add(t);
                             }
-                            midi.tempoTickMultiplier = (double)midi.division / btempo * 1000;
-                            break;
-                        /*else if (command == 0x51)
+                        }
+                        midi.tempoTickMultiplier = ((double)midi.division / btempo) * 1000;
+                    }
+                    else if (command == 0x54)
+                    {
+                        command = reader.Read();
+                        if (command != 5)
                         {
-                            command = reader.Read();
-                            if (command != 3)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            int btempo = 0;
-                            for (int i = 0; i != 3; i++)
-                                btempo = (int)((btempo << 8) | reader.Read());
-                            if (!timebase)
-                            {
-                                Tempo t = new Tempo();
-                                t.pos = trackTime;
-                                t.tempo = btempo;
-
-                                lock (globalTempoEvents)
-                                {
-                                    globalTempoEvents.Add(t);
-                                }
-                            }
-                            midi.tempoTickMultiplier = ((double)midi.division / btempo) * 1000;
-                        }*/
-                        case 0x54:
-                            command = reader.Read();
-                            if (command != 5)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(4);
-                            break;
-                        /*else if (command == 0x54)
-                        {
-                            command = reader.Read();
-                            if (command != 5)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(4);
-                        }*/
-                        case 0x58:
-                            command = reader.Read();
-                            if (command != 4)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(4);
-                            break;
-                        /*else if (command == 0x58)
-                        {
-                            command = reader.Read();
-                            if (command != 4)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(4);
-                        }*/
-                        case 0x59:
-                            command = reader.Read();
-                            if (command != 2)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(2);
-                            //TODO: Key Signature
-                            break;
-                        /*else if (command == 0x59)
-                        {
-                            command = reader.Read();
-                            if (command != 2)
-                            {
-                                throw new Exception("Corrupt Track");
-                            }
-                            reader.Skip(2);
-                            //TODO: Key Signature
-                        }*/
-                        case 0x7F:
-                            size = (int)ReadVariableLen();
-                            data = new byte[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                data[i] = reader.Read();
-                            }
-                            break;
-                        /*else if (command == 0x7F)
-                        {
-                            int size = (int)ReadVariableLen();
-                            byte[] data = new byte[size];
-                            for (int i = 0; i < size; i++)
-                            {
-                                data[i] = reader.Read();
-                            }
-                        }*/
-                        default:
                             throw new Exception("Corrupt Track");
-                            /*else
-                            {
-                                throw new Exception("Corrupt Track");
-                            }*/
+                        }
+                        reader.Skip(4);
+                    }
+                    else if (command == 0x58)
+                    {
+                        command = reader.Read();
+                        if (command != 4)
+                        {
+                            throw new Exception("Corrupt Track");
+                        }
+                        reader.Skip(4);
+                    }
+                    else if (command == 0x59)
+                    {
+                        command = reader.Read();
+                        if (command != 2)
+                        {
+                            throw new Exception("Corrupt Track");
+                        }
+                        reader.Skip(2);
+                        //TODO: Key Signature
+                    }
+                    else if (command == 0x7F)
+                    {
+                        int size = (int)ReadVariableLen();
+                        byte[] data = new byte[size];
+                        for (int i = 0; i < size; i++)
+                        {
+                            data[i] = reader.Read();
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Corrupt Track");
                     }
                 }
                 else
@@ -1084,7 +823,7 @@ namespace ZenithEngine
                         }
                         int btempo = 0;
                         for (int i = 0; i != 3; i++)
-                            btempo = (btempo << 8) | reader.Read();
+                            btempo = (int)((btempo << 8) | reader.Read());
                         if (trackTime == 0)
                         {
                             zerothTempo = btempo;

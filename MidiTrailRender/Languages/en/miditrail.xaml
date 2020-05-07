@@ -42,8 +42,6 @@
     <system:String x:Key="mediumPreset">Medium</system:String>
     <system:String x:Key="closerPreset">Closer</system:String>
     <system:String x:Key="closePreset">Close</system:String>
-    <!--New Preset-->
-    <system:String x:Key="veryClosePreset">Very Close</system:String>
 
     <system:String x:Key="verticalNotes">Vertical Notes</system:String>
     <system:String x:Key="FOV">FOV</system:String>
@@ -61,7 +59,9 @@
     <system:String x:Key="offsetY">Y</system:String>
     <system:String x:Key="offsetZ">Z</system:String>
     <system:String x:Key="topPreset">Top</system:String>
-    <system:String x:Key="perspectivePreset">Perspective</system:String> 
+    <system:String x:Key="perspectivePreset">Perspective</system:String>
+    <!--New Preset-->
+    <system:String x:Key="veryClosePreset">Very Close</system:String>
 
     <!--Aura-->
     <system:String x:Key="imageHint">Image needs to be square png and only alpha is taken into account</system:String>
@@ -70,5 +70,5 @@
     <system:String x:Key="auraStrength">Strength:</system:String>
     <system:String x:Key="openAuraFolder">Open Aura Folder</system:String>
     <!--Aura Radius-->
-    <system:String x:Key="auraRadius">Radius: </system:String>
+    <system:String x:Key="auraRadius">Radius:</system:String>
 </ResourceDictionary>

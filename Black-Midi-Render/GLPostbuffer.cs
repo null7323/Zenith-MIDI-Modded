@@ -15,7 +15,8 @@ namespace Zenith_MIDI
 
         public GLPostbuffer(int width, int height)
         {
-            GLUtils.GenFrameBufferTexture(width, height, out int b, out int t);
+            int b, t;
+            GLUtils.GenFrameBufferTexture(width, height, out b, out t);
             BufferID = b;
             TextureID = t;
         }

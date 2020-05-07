@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -7,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-// using ZenithShared;
+using ZenithShared;
 
 namespace Zenith_MIDI
 {
@@ -20,11 +21,7 @@ namespace Zenith_MIDI
             try
             {
 #endif
-                Console.Title = "Zenith 2.0.6 (Modded Version 5.2)";
-                Console.WriteLine("Zenith 2.0.6 | Modded by TBL, qishipai, FruityTeaTIPB5");
-                // just tips
-                Console.WriteLine("Warning: This modded version is not so stable.");
-                Console.WriteLine("--------------------------------------------");
+                Console.Title = "Zenith Mod 6";
                 Application app = new Application();
                 app.Run(new MainWindow());
 #if !DEBUG

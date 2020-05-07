@@ -143,10 +143,5 @@ namespace ZenithEngine.UI
                 ignorevalue = false;
             }
         }
-
-        private void updown_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

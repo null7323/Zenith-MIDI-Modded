@@ -32,12 +32,12 @@ namespace ZenithEngine
         string searchPath = "";
         public string SelectedImage { get; private set; } = "";
         bool randomise = true;
-        // seed
-        int seed = 0;
         int selectedIndex = -1;
         List<Bitmap> images = new List<Bitmap>();
 
         public event Action PaletteChanged;
+
+        int seed = 0;
 
         float defS, defV;
         public NoteColorPalettePick()
@@ -67,7 +67,7 @@ namespace ZenithEngine
             }
             using (Bitmap palette = new Bitmap(32, 8))
             {
-                for (int i = 0; i < 256; i++)
+                for (int i = 0; i < 32 * 8; i++)
                 {
                     palette.SetPixel(i % 32, (i - i % 32) / 32, (Color)Color4.FromHsv(new OpenTK.Vector4(i * mult % 1, defS, defV, 1)));
                     i++;
@@ -77,22 +77,19 @@ namespace ZenithEngine
             }
             using (Bitmap palette = new Bitmap(32, 8))
             {
-                for (int i = 0; i < 256; i++)
+                for (int i = 0; i < 32 * 8; i++)
                 {
-                    //palette.SetPixel(i % 32, (i - i % 32) / 32, (Color)Color4.FromHsv(new OpenTK.Vector4(i * mult % 1, defS, defV, 0.8f)));
-                    palette.SetPixel(i & 31, (i - i & 31) >> 5, (Color)Color4.FromHsv(new OpenTK.Vector4(i * mult % 1, defS, defV, 0.8f)));
-                    ++i;
-                    //palette.SetPixel(i % 32, (i - i % 32) / 32, (Color)Color4.FromHsv(new OpenTK.Vector4(((i - 1) * mult + 0.166f) % 1, defS, defV, 0.8f)));
-                    palette.SetPixel(i & 31, (i - i & 31) / 32, (Color)Color4.FromHsv(new OpenTK.Vector4(((i - 1) * mult + 0.166f) % 1, defS, defV, 0.8f)));
+                    palette.SetPixel(i % 32, (i - i % 32) / 32, (Color)Color4.FromHsv(new OpenTK.Vector4(i * mult % 1, defS, defV, 0.8f)));
+                    i++;
+                    palette.SetPixel(i % 32, (i - i % 32) / 32, (Color)Color4.FromHsv(new OpenTK.Vector4(((i - 1) * mult + 0.166f) % 1, defS, defV, 0.8f)));
                 }
                 palette.Save(Path.Combine(searchPath, "Random Alpha Gradients.png"));
             }
             using (Bitmap palette = new Bitmap(16, 8))
             {
-                for (int i = 0; i < 128; i++)
+                for (int i = 0; i < 16 * 8; i++)
                 {
-                    // palette.SetPixel(i % 16, (i - i % 16) / 16, (Color)Color4.FromHsv(new OpenTK.Vector4(i * mult % 1, defS, defV, 0.8f)));
-                    palette.SetPixel(i & 15, (i - i & 15) / 16, (Color)Color4.FromHsv(new OpenTK.Vector4(i * mult % 1, defS, defV, 0.8f)));
+                    palette.SetPixel(i % 16, (i - i % 16) / 16, (Color)Color4.FromHsv(new OpenTK.Vector4(i * mult % 1, defS, defV, 0.8f)));
                 }
                 palette.Save(Path.Combine(searchPath, "Random with Alpha.png"));
             }
@@ -161,7 +158,7 @@ namespace ZenithEngine
                         img.SetPixel(i, 0, Color.FromArgb(r, g, b));
                     }
                     images.Add(img);
-                    var item = new ListBoxItem() { Content = "PFA 颜色配置" };
+                    var item = new ListBoxItem() { Content = "PFA Config Colors" };
                     paletteList.Items.Add(item);
 
                 }
@@ -192,9 +189,9 @@ namespace ZenithEngine
         public Color4[] GetColors(int tracks)
         {
             Random r = new Random(seed);
-            double[] order = new double[tracks << 4];
-            int[] coords = new int[tracks << 4];
-            for (int i = 0; i < order.Length; ++i)
+            double[] order = new double[tracks * 16];
+            int[] coords = new int[tracks * 16];
+            for (int i = 0; i < order.Length; i++)
             {
                 order[i] = r.NextDouble();
                 coords[i] = i;
@@ -205,13 +202,13 @@ namespace ZenithEngine
             }
             List<Color4> cols = new List<Color4>();
             var img = images[selectedIndex];
-            for (int i = 0; i < tracks; ++i)
+            for (int i = 0; i < tracks; i++)
             {
-                for (int j = 0; j < 16; ++j)
+                for (int j = 0; j < 16; j++)
                 {
-                    int y = coords[(i << 4) + j];
-                    int x = y & 15;
-                    y -= x;
+                    int y = coords[i * 16 + j];
+                    int x = y % 16;
+                    y = y - x;
                     y /= 16;
                     if (img.Width == 16)
                     {
@@ -235,8 +232,9 @@ namespace ZenithEngine
 
         private void randomiseOrder_CheckToggled(object sender, RoutedPropertyChangedEventArgs<bool> e)
         {
-            randomise = randomiseOrder.IsChecked;
-            if (randomise) ++seed;
+            randomise = (bool)randomiseOrder.IsChecked;
+            if (randomise) seed++;
+            PaletteChanged?.Invoke();
         }
 
         private void openPaletteFolder_Click(object sender, RoutedEventArgs e)

@@ -770,6 +770,8 @@ namespace Zenith_MIDI
             settings.renderSecondsDelay = 0;
             settings.useFilterThreads = enableFilterArg.IsChecked;
             settings.filterThreadsForRender = (int)filterThreadsForRender.Value;
+            settings.preview_width = (int)previewWidthSelect.Value;
+            settings.preview_height = (int)previewHeightSelect.Value;
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.RunContinuationsAsynchronously | TaskCreationOptions.LongRunning);
             Resources["notPreviewing"] = false;
         }
@@ -847,7 +849,11 @@ namespace Zenith_MIDI
             settings.ffMaskPath = alphaPath.Text;
             settings.useFilterThreads = enableFilterArg.IsChecked;
             settings.filterThreadsForRender = (int)filterThreadsForRender.Value;
-            renderThread = Task.Factory.StartNew(RunRenderWindow);
+
+            settings.preview_width = (int)previewWidthSelect.Value;
+            settings.preview_height = (int)previewHeightSelect.Value;
+
+            renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
             Resources["notPreviewing"] = false;
             Resources["notRendering"] = false;
         }

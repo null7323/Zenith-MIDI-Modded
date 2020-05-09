@@ -4,6 +4,7 @@
 
 #### New Features | 新特性
 
+- Faster | 导出视频更快
 - Support more encoders | 支持更多编码器
 - Support parameter '-filter_threads' | 支持-filter threads参数
 - Support more YUV methods | 支持更多YUV方法  

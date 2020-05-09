@@ -28,13 +28,13 @@ namespace NoteCountRender
     {
         Settings settings;
 
-        string defText = @"Notes: {nc} / {tn}
+        const string defText = @"Notes: {nc} / {tn}
 BPM: {bpm}
 NPS: {nps}
 PPQ: {ppq}
 Polyphony: {plph}
 Time: {currtime}";
-        string fullText = @"Notes: {nc} / {tn} / {nr}
+        const string fullText = @"Notes: {nc} / {tn} / {nr}
 BPM: {bpm}
 NPS: {nps} (Max: {mnps})
 Polyphony: {plph} (Max: {mplph})
@@ -53,7 +53,7 @@ Average NPS: {avgnps}
 Notes: {notep}%
 Ticks: {tickp}%
 Time: {timep}%";
-        string MIDITrail = @"TIME:{cmiltime}/{tmiltime}  BPM:{bpm}  BEAT:{tsn}/{tsd}  BAR:{currbars}/{totalbars}  NOTES:{nc}/{tn}";
+        const string MIDITrail = @"TIME:{cmiltime}/{tmiltime}  BPM:{bpm}  BEAT:{tsn}/{tsd}  BAR:{currbars}/{totalbars}  NOTES:{nc}/{tn}";
 
         bool initialised = false;
 

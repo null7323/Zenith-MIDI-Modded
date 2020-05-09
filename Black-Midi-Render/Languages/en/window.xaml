@@ -73,6 +73,7 @@
     <system:String x:Key="filterThreadsUsing">Filter Threads</system:String>
     <system:String x:Key="encoders">Encoder For Rendering</system:String>
     <system:String x:Key="yuv">YUV</system:String>
+    <system:String x:Key="maxMemory">Max Render Memory (MBytes)</system:String>
     <!--End-->
     
     <!--NEW 1.5-->

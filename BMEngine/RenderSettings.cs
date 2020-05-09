@@ -48,8 +48,8 @@ namespace ZenithEngine
         public bool useBitrate = true;
         public bool CustomFFmpeg = false;
         public int bitrate = 20000;
-        public int crf = 17;
-        public string crfPreset = "medium";
+        public int crf = 10;
+        public string crfPreset = "ultrafast";
         public bool ffmpegDebug = false;
         public string ffoption = "";
 
@@ -94,9 +94,11 @@ namespace ZenithEngine
         // skip
         public int skip = 5000;
         // width, height
-        public int preview_width = (int)(OpenTK.DisplayDevice.Default.Width / 1.5);
-        public int preview_height = (int)(OpenTK.DisplayDevice.Default.Width / 1.5) / 16 * 9;
+        public int preview_width = /*(int)(OpenTK.DisplayDevice.Default.Width / 1.5)*/1920;
+        public int preview_height = /*(int)(OpenTK.DisplayDevice.Default.Width / 1.5) / 16 * 9*/1080;
         // note buffer size ratio
         public double noteBufferSizeRadio = 1;
+        // max render memory
+        public long maxRenderRAM = 8192;
     }
 }

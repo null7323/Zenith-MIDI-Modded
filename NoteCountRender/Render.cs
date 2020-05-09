@@ -276,7 +276,7 @@ namespace NoteCountRender
 
             if (settings.textAlignment == Alignments.TopLeft)
             {
-                var size = textEngine.GetBoundBox(renderText);
+                // var size = textEngine.GetBoundBox(renderText);
                 Matrix4 transform = Matrix4.Identity;
                 transform = Matrix4.Mult(transform, Matrix4.CreateScale(1.0f / renderSettings.width, -1.0f / renderSettings.height, 1.0f));
                 transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-1, 1, 0));

@@ -14,13 +14,12 @@ namespace Zenith_MIDI
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, File.ReadAllText("Shaders\\" + name + ".vert"));
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, File.ReadAllText("Shaders\\" + name + ".frag"));
@@ -40,13 +39,12 @@ namespace Zenith_MIDI
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, File.ReadAllText("Shaders\\Post\\post.vert"));
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, File.ReadAllText("Shaders\\Post\\" + name + ".frag"));

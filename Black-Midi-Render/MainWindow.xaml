@@ -231,7 +231,7 @@
                                                     </DockPanel>
                                                     <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Left" LastChildFill="False" Margin="0,5" VerticalAlignment="Top">
                                                         <Label Content="{DynamicResource superRes}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
-                                                        <ui:NumberSelect DockPanel.Dock="Left" x:Name="SSAAFactor" Value="1" Maximum="4" Minimum="1" HorizontalAlignment="Left" Width="118" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}" Margin="20,0,0,0"  />
+                                                        <ui:NumberSelect DockPanel.Dock="Left" x:Name="SSAAFactor" Value="1" Maximum="8" Minimum="1" HorizontalAlignment="Left" Width="118" IsEnabled="{Binding IsEnabled, ElementName=notPreviewingOrRendering}" Margin="20,0,0,0"  />
                                                     </DockPanel>
                                                     <DockPanel>
                                                         <Label Content="{DynamicResource previewHeightLabel}" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left"/>
@@ -257,7 +257,7 @@
                                                     </ComboBox>
                                                 </DockPanel>
                                             </DockPanel>
-                                            <DockPanel HorizontalAlignment="Center">
+                                            <DockPanel HorizontalAlignment="Center" Margin="0,0,0,5">
                                                 <Label Content="{DynamicResource noteBufferSize}" HorizontalAlignment="Left" Margin="0,0,0,0"/>
                                                 <ComboBox x:Name="noteBufferSizeComboBox" Width="158" HorizontalAlignment="Center" Margin="10,0,0,0" SelectedIndex="3" SelectionChanged="NoteBufferSize_ValueChanged" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}">
                                                     <ComboBoxItem Content="{DynamicResource sizeExtremelyLarge}"/>
@@ -420,8 +420,10 @@
                                     </TextBox.IsEnabled>
                                 </TextBox>
                             </DockPanel>
-                            <DockPanel LastChildFill="False" Margin="0,30,0,0" VerticalAlignment="Top">
-                                <Label Content="{DynamicResource delatStart}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
+                            <DockPanel LastChildFill="False" Margin="0,10,0,0" VerticalAlignment="Top">
+                                <Label Content="{DynamicResource maxMemory}" DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                <ui:NumberSelect x:Name="maxRenderMemory" Minimum="2048" Maximum="1024576" HorizontalAlignment="Left" VerticalAlignment="Top" Width="102" Margin="5,0,0,0" Value="8192" IsEnabled="{Binding IsEnabled, ElementName=notRendering}"/>
+                                <Label Content="{DynamicResource delatStart}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="50,0,0,0"/>
                                 <ui:NumberSelect x:Name="secondsDelay" Value="0" Maximum="10" Minimum="0" HorizontalAlignment="Left" Width="82"  IsEnabled="{Binding IsEnabled, ElementName=notRendering}" DockPanel.Dock="Left" />
                             </DockPanel>
                             <!--Encoder and yuv-->
@@ -446,7 +448,7 @@
                             </DockPanel>
                             <DockPanel LastChildFill="False" Margin="0,15,0,5" VerticalAlignment="Top">
                                 <ui:BetterCheckbox Text="{DynamicResource filterThreadsUsing}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="0,0,0,0" x:Name="enableFilterArg" IsChecked="False" CheckToggled="enableFilterThreads_Toggled" IsEnabled="{Binding IsEnabled, ElementName=notRendering}"/>
-                                <ui:NumberSelect x:Name="filterThreadsForRender" Value="8" Maximum="128" Minimum="1" HorizontalAlignment="Left" Width="82" DockPanel.Dock="Left" Margin="5,-5,0,0">
+                                <ui:NumberSelect x:Name="filterThreadsForRender" Value="8" Maximum="128" Minimum="1" HorizontalAlignment="Left" Width="82" DockPanel.Dock="Left" Margin="5,-8,0,0">
                                     <ui:NumberSelect.IsEnabled>
                                         <MultiBinding Converter="{StaticResource AndValueConverter}">
                                             <Binding ElementName="notRendering" Path="IsEnabled"/>

@@ -46,7 +46,7 @@ namespace FlatRender
         #endregion
 
         #region Shaders
-        string noteShaderVert = @"#version 330 compatibility
+        const string noteShaderVert = @"#version 330 compatibility
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec4 glColor;
@@ -59,7 +59,7 @@ void main()
     color = glColor;
 }
 ";
-        string noteShaderFrag = @"#version 330 compatibility
+        const string noteShaderFrag = @"#version 330 compatibility
  
 in vec4 color;
  
@@ -100,13 +100,13 @@ void main()
         int vertexBufferID;
         int colorBufferID;
 
-        int quadBufferLength = 2048 * 2;
+        int quadBufferLength = 4096;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         int quadBufferPos = 0;
 
         int indexBufferId;
-        uint[] indexes = new uint[2048 * 4 * 6];
+        uint[] indexes = new uint[8192 * 6];
 
         bool[] blackKeys = new bool[257];
         int[] keynum = new int[257];
@@ -143,13 +143,12 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, noteShaderVert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, noteShaderFrag);
@@ -277,9 +276,9 @@ void main()
             #region Notes
             quadBufferPos = 0;
             double notePosFactor = 1 / deltaTimeOnScreen * (1 - pianoHeight);
+            double renderCutoff = midiTime + deltaTimeOnScreen;
             foreach (Note n in notes)
             {
-                double renderCutoff = midiTime + deltaTimeOnScreen;
                 if (n.end >= midiTime || !n.hasEnded)
                 { 
                     if (n.start < renderCutoff)
@@ -356,7 +355,7 @@ void main()
                                 quadColorbuff[pos++] = b;
                                 quadColorbuff[pos++] = a;
 
-                                quadBufferPos++;
+                                ++quadBufferPos;
                             }
                             FlushQuadBuffer();
                         }
@@ -372,7 +371,7 @@ void main()
 
             #region Keyboard
             y1 = pianoHeight;
-            y2 = 0;
+            // y2 = 0;
             Color4[] origColors = new Color4[257];
             for (int k = kbfirstNote; k < kblastNote; k++)
             {
@@ -564,14 +563,14 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 8 * 8),
+                (IntPtr)(quadBufferPos * 64),
                 quadVertexbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 16 * 4),
+                (IntPtr)(quadBufferPos * 64),
                 quadColorbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 16, 0);
@@ -581,6 +580,7 @@ void main()
             quadBufferPos = 0;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         bool isBlackNote(int n)
         {
             n = n % 12;

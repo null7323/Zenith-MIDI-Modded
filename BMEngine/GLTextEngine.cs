@@ -18,7 +18,7 @@ namespace ZenithEngine
     public class GLTextEngine
     {
         #region Shaders
-        string textShaderVert = @"#version 330 compatibility
+        const string textShaderVert = @"#version 330 compatibility
 
 layout(location = 0) in vec2 position;
 layout(location = 1) in vec2 uv;
@@ -36,7 +36,7 @@ void main()
     Color = Col;
 }
 ";
-        string textShaderFrag = @"#version 330 compatibility
+        const string textShaderFrag = @"#version 330 compatibility
 
 in vec2 UV;
 in vec4 Color;
@@ -65,13 +65,13 @@ void main()
         int vertexBufferID;
         int uvBufferID;
 
-        int quadBufferLength = 2048 * 2;
+        int quadBufferLength = 4096;
         double[] quadVertexbuff;
         double[] quaduvbuff;
         int quadBufferPos = 0;
 
         int indexBufferId;
-        uint[] indexes = new uint[2048 * 4 * 6];
+        uint[] indexes = new uint[8192 * 6];
 
         public void Dispose()
         {
@@ -87,13 +87,12 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, textShaderVert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, textShaderFrag);
@@ -112,8 +111,29 @@ void main()
 
             GL.GenBuffers(1, out vertexBufferID);
             GL.GenBuffers(1, out uvBufferID);
-            for (uint i = 0; i < indexes.Length / 6; i++)
+            for (uint i = 0; i < indexes.Length / 6; ++i)
             {
+                indexes[i * 6 + 0] = i * 4 + 0;
+                indexes[i * 6 + 1] = i * 4 + 1;
+                indexes[i * 6 + 2] = i * 4 + 3;
+                indexes[i * 6 + 3] = i * 4 + 1;
+                indexes[i * 6 + 4] = i * 4 + 3;
+                indexes[i * 6 + 5] = i * 4 + 2;
+                ++i;
+                indexes[i * 6 + 0] = i * 4 + 0;
+                indexes[i * 6 + 1] = i * 4 + 1;
+                indexes[i * 6 + 2] = i * 4 + 3;
+                indexes[i * 6 + 3] = i * 4 + 1;
+                indexes[i * 6 + 4] = i * 4 + 3;
+                indexes[i * 6 + 5] = i * 4 + 2;
+                ++i;
+                indexes[i * 6 + 0] = i * 4 + 0;
+                indexes[i * 6 + 1] = i * 4 + 1;
+                indexes[i * 6 + 2] = i * 4 + 3;
+                indexes[i * 6 + 3] = i * 4 + 1;
+                indexes[i * 6 + 4] = i * 4 + 3;
+                indexes[i * 6 + 5] = i * 4 + 2;
+                ++i;
                 indexes[i * 6 + 0] = i * 4 + 0;
                 indexes[i * 6 + 1] = i * 4 + 1;
                 indexes[i * 6 + 2] = i * 4 + 3;
@@ -341,7 +361,7 @@ void main()
             var characters = new List<Bitmap>();
             using (var font = new Font(fontName, fontSize, fontStyle))
             {
-                for (int i = 0; i < Characters.Length; i++)
+                for (int i = 0; i < Characters.Length; ++i)
                 {
                     var charBmp = GenerateCharacter(font, Characters[i]);
                     charSizes[i] = GetSize(font, Characters[i]);
@@ -353,7 +373,7 @@ void main()
                 using (var gfx = Graphics.FromImage(charMap))
                 {
                     gfx.FillRectangle(Brushes.Black, 0, 0, charMap.Width, charMap.Height);
-                    for (int i = 0; i < characters.Count; i++)
+                    for (int i = 0; i < characters.Count; ++i)
                     {
                         var c = characters[i];
                         int x = i % charImWidth;

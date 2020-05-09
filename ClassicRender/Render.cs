@@ -49,7 +49,7 @@ namespace ClassicRender
         #endregion
 
         #region Shaders
-        string noteShaderVert = @"#version 330 compatibility
+        const string noteShaderVert = @"#version 330 compatibility
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec4 glColor;
@@ -63,7 +63,7 @@ void main()
     color = vec4(glColor.xyz + attrib.x, glColor.w);
 }
 ";
-        string noteShaderFrag = @"#version 330 compatibility
+        const string noteShaderFrag = @"#version 330 compatibility
  
 in vec4 color;
  
@@ -101,7 +101,7 @@ void main()
         int colorBufferID;
         int attribBufferID;
 
-        int quadBufferLength = 2048 * 64;
+        int quadBufferLength = 131072;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         double[] quadAttribbuff;

@@ -106,21 +106,41 @@ namespace ZenithEngine
         public void ResetColors()
         {
             trkColors = new NoteColor[16];
-            for (int i = 0; i < 16; i++)
+            var Gray = Color4.Gray;
+            for (int i = 0; i < 16; ++i)
             {
-                trkColors[i] = new NoteColor() { left = Color4.Gray, right = Color4.Gray, isDefault = true };
+                trkColors[i] = new NoteColor() { left = Gray, right = Gray, isDefault = true };
+                ++i;
+                trkColors[i] = new NoteColor() { left = Gray, right = Gray, isDefault = true };
+                ++i;
+                trkColors[i] = new NoteColor() { left = Gray, right = Gray, isDefault = true };
+                ++i;
+                trkColors[i] = new NoteColor() { left = Gray, right = Gray, isDefault = true };
             }
         }
 
         public void SetZeroColors()
         {
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 16; ++i)
             {
                 if (zeroTickTrkColors[i] != null)
                 {
                     trkColors[i].left = zeroTickTrkColors[i].left;
                     trkColors[i].right = zeroTickTrkColors[i].right;
                 }
+                ++i;
+                if (zeroTickTrkColors[i] != null)
+                {
+                    trkColors[i].left = zeroTickTrkColors[i].left;
+                    trkColors[i].right = zeroTickTrkColors[i].right;
+                }
+                ++i;
+                if (zeroTickTrkColors[i] != null)
+                {
+                    trkColors[i].left = zeroTickTrkColors[i].left;
+                    trkColors[i].right = zeroTickTrkColors[i].right;
+                }
+                ++i;
             }
         }
 
@@ -138,7 +158,18 @@ namespace ZenithEngine
             ResetColors();
 
             zeroTickTrkColors = new NoteColor[16];
-            for (int i = 0; i < 16; i++) zeroTickTrkColors[i] = null;
+            // for (int i = 0; i < 16; i++) zeroTickTrkColors[i] = null;
+            for (int i = 0; i < 16; ++i)
+            {
+                zeroTickTrkColors[i] = null;
+                ++i;
+                zeroTickTrkColors[i] = null;
+                ++i;
+                zeroTickTrkColors[i] = null;
+                ++i;
+                zeroTickTrkColors[i] = null;
+
+            }
         }
 
         long ReadVariableLen()
@@ -203,8 +234,7 @@ namespace ZenithEngine
                 foreach (var un in UnendedNotes)
                 {
                     var iter = un.Iterate();
-                    Note n;
-                    while (iter.MoveNext(out n))
+                    while (iter.MoveNext(out Note n))
                     {
                         n.end = trackTime;
                         n.hasEnded = true;
@@ -274,7 +304,7 @@ namespace ZenithEngine
                         if (UnendedNotes == null)
                         {
                             UnendedNotes = new FastList<Note>[256 * 16];
-                            for (int i = 0; i < 256 * 16; i++)
+                            for (int i = 0; i < 256 * 16; ++i)
                             {
                                 UnendedNotes[i] = new FastList<Note>();
                             }

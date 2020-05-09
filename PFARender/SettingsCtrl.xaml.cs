@@ -60,7 +60,7 @@ namespace PFARender
             if (sender == firstNote) settings.firstNote = (int)firstNote.Value;
             if (sender == lastNote) settings.lastNote = (int)lastNote.Value + 1;
             if (sender == pianoHeight) settings.pianoHeight = (double)pianoHeight.Value / 100;
-            if (sender == noteDeltaScreenTime) settings.deltaTimeOnScreen = (int)noteDeltaScreenTime.Value;
+            if (sender == noteDeltaScreenTime) settings.deltaTimeOnScreen = /*(int)*/noteDeltaScreenTime.Value;
             if (sender == borderWidth) settings.borderWidth = (double)borderWidth.Value;
         }
 

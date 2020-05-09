@@ -165,13 +165,12 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, vert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, frag);
@@ -239,7 +238,7 @@ void main()
         int buffer3dbuf;
         int buffer3dbufdepth;
 
-        int[] whiteKeyVert = new int[7 * 3];
+        int[] whiteKeyVert = new int[21];
         int whiteKeyCol;
         int whiteKeyIndx;
         int whiteKeyBlend;
@@ -254,7 +253,7 @@ void main()
         int noteIndx;
         int noteShade;
 
-        int noteBuffLen = 2048 * 256;
+        int noteBuffLen = /*2048 * 256*/524288;
 
         double[] noteVertBuff;
         float[] noteColBuff;
@@ -413,12 +412,12 @@ void main()
 
             noteIndxBuff = new int[noteBuffLen * 4];
 
-            circleVertBuff = new double[256 * 4 * 3];
-            circleColorBuff = new float[256 * 4 * 4];
-            circleUVBuff = new double[256 * 4 * 2];
-            circleIndxBuff = new int[256 * 4];
+            circleVertBuff = new double[3072];
+            circleColorBuff = new float[4096];
+            circleUVBuff = new double[2048];
+            circleIndxBuff = new int[1024];
 
-            for (int i = 0, noteIndxBuffLen = noteIndxBuff.Length; i < noteIndxBuffLen; ++i) noteIndxBuff[i] = i;
+            for (int i = 0; i < noteIndxBuff.Length; ++i) noteIndxBuff[i] = i;
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, noteIndx);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
@@ -426,7 +425,7 @@ void main()
                 noteIndxBuff,
                 BufferUsageHint.StaticDraw);
 
-            for (int i = 0, circleIndxBuffLen = circleIndxBuff.Length; i < circleIndxBuffLen; ++i) circleIndxBuff[i] = i;
+            for (int i = 0; i < circleIndxBuff.Length; ++i) circleIndxBuff[i] = i;
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, circleIndx);
             GL.BufferData(
                 BufferTarget.ElementArrayBuffer,
@@ -1069,7 +1068,7 @@ void main()
                         wdth = (float)(0.6f / (knmln - knmfn + 1));
                         int bknum = keynum[i] % 5;
                         double offset = wdth / 2;
-                        if (bknum == 0)
+                        /*if (bknum == 0)
                         {
                             offset *= 1.4;
                         }
@@ -1084,6 +1083,21 @@ void main()
                         else if (bknum == 4)
                         {
                             offset *= 1 / 1.5;
+                        }*/
+                        switch (bknum)
+                        {
+                            case 0:
+                                offset *= 1.4;
+                                break;
+                            case 1:
+                                offset /= 1.4;
+                                break;
+                            case 2:
+                                offset *= 1.5;
+                                break;
+                            case 4:
+                                offset /= 1.5;
+                                break;
                         }
                         x1array[i] = (float)(keynum[_i] - knmfn) / (knmln - knmfn + 1) - offset;
                         wdtharray[i] = wdth;
@@ -2029,9 +2043,10 @@ void main()
             noteBuffPos = 0;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         bool isBlackNote(int n)
         {
-            n = n % 12;
+            n %= 12;
             return n == 1 || n == 3 || n == 6 || n == 8 || n == 10;
         }
     }

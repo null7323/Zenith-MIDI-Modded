@@ -148,13 +148,13 @@ namespace MIDITrailRender
         private void RenderDistSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
-            settings.viewdist = (double)renderDistSlider.Value;
+            settings.viewdist = renderDistSlider.Value;
         }
 
         private void RenderDistBackSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (settings == null) return;
-            settings.viewback = (double)renderDistBackSlider.Value;
+            settings.viewback = renderDistBackSlider.Value;
         }
         // note ratio
         private void NoteWidthRatio_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

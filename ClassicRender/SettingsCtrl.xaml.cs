@@ -58,7 +58,7 @@ namespace ClassicRender
                 if (sender == firstNote) settings.firstNote = (int)firstNote.Value;
                 if (sender == lastNote) settings.lastNote = (int)lastNote.Value + 1;
                 if (sender == pianoHeight) settings.pianoHeight = (double)pianoHeight.Value / 100;
-                if (sender == noteDeltaScreenTime) settings.deltaTimeOnScreen = (int)noteDeltaScreenTime.Value;
+                if (sender == noteDeltaScreenTime) settings.deltaTimeOnScreen = /*(int)*/noteDeltaScreenTime.Value;
         }
 
         private void NoteDeltaScreenTime_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

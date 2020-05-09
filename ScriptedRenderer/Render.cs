@@ -50,7 +50,7 @@ namespace ScriptedRender
         public MidiInfo CurrentMidi { get; set; }
 
         #region Shaders
-        string quadShaderVert = @"#version 330 core
+        const string quadShaderVert = @"#version 330 core
 
 layout(location=0) in vec2 in_position;
 layout(location=1) in vec4 in_color;
@@ -69,7 +69,7 @@ void main()
     texid = in_texid;
 }
 ";
-        string quadShaderFrag = @"#version 330 core
+        const string quadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -109,7 +109,7 @@ void main()
     out_color = col * v2f_color;
 }
 ";
-        string invertQuadShaderFrag = @"#version 330 core
+        const string invertQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -154,7 +154,7 @@ void main()
     out_color.w = 1 - out_color.w;
 }
 ";
-        string evenQuadShaderFrag = @"#version 330 core
+        const string evenQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -212,13 +212,12 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, vert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, frag);
@@ -245,7 +244,7 @@ void main()
         int uvBufferID;
         int texIDBufferID;
 
-        int quadBufferLength = 2048 * 64;
+        int quadBufferLength = 131072;
         double[] quadVertexbuff;
         float[] quadColorbuff;
         double[] quadUVbuff;
@@ -253,7 +252,7 @@ void main()
         int quadBufferPos = 0;
 
         int indexBufferId;
-        uint[] indexes = new uint[2048 * 128 * 6];
+        uint[] indexes = new uint[262144 * 6];
 
         double[] x1arrayKeys = new double[257];
         double[] x1arrayNotes = new double[257];
@@ -536,7 +535,7 @@ void main()
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             #region Vars
-            for (int i = 0; i < 12; i++) activeTexIds[i] = -1;
+            for (int i = 0; i < 12; ++i) activeTexIds[i] = -1;
             currentShader = TextureShaders.Normal;
             currentBlendFunc = BlendFunc.Mix;
 
@@ -674,7 +673,7 @@ void main()
 
         int FindTexSlot(int id)
         {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 12; ++i)
             {
                 if (activeTexIds[i] == id) return i;
                 if (activeTexIds[i] == -1)
@@ -710,14 +709,14 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 8 * 8),
+                (IntPtr)(quadBufferPos * 64),
                 quadVertexbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 16 * 4),
+                (IntPtr)(quadBufferPos * 64),
                 quadColorbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 16, 0);
@@ -731,7 +730,7 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, texIDBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 1 * 4 * 4),
+                (IntPtr)(quadBufferPos * 16),
                 quadTexIDbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(3, 1, VertexAttribPointerType.Float, false, 4, 0);

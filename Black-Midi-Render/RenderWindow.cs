@@ -154,13 +154,12 @@ void main()
         {
             int _vertexObj = GL.CreateShader(ShaderType.VertexShader);
             int _fragObj = GL.CreateShader(ShaderType.FragmentShader);
-            int statusCode;
             string info;
 
             GL.ShaderSource(_vertexObj, vert);
             GL.CompileShader(_vertexObj);
             info = GL.GetShaderInfoLog(_vertexObj);
-            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out statusCode);
+            GL.GetShader(_vertexObj, ShaderParameter.CompileStatus, out int statusCode);
             if (statusCode != 1) throw new ApplicationException(info);
 
             GL.ShaderSource(_fragObj, frag);
@@ -236,7 +235,7 @@ void main()
         int postShaderDownscale;
         int postShaderMask;
         int postShaderMaskColor;
-        int postShaderBlackFill;
+        // int postShaderBlackFill;
 
         int uDownscaleRes;
         int uDownscaleFac;
@@ -291,7 +290,7 @@ void main()
             {
                 if (settings.includeAudio)
                 {
-                    double fstep = ((double)midi.division / lastTempo) * (1000000 / settings.fps);
+                    double fstep = (midi.division / lastTempo) * (1000000 / settings.fps);
                     double offset = -midiTime / fstep / settings.fps;
                     offset = Math.Round(offset * 100) / 100;
                     args = "" +
@@ -391,6 +390,10 @@ void main()
                                     break;
                             }
                         }
+                        else
+                        {
+                            args += " -preset:v " + settings.crfPreset + " -crf " + settings.crf;
+                        }
                     }
                 }
             }
@@ -449,7 +452,7 @@ void main()
         // GLTextEngine textEngine;
         public RenderWindow(CurrentRendererPointer renderer, MidiFile midi, RenderSettings settings) : base(16, 9, new GraphicsMode(new ColorFormat(8, 8, 8, 8)), "Render", GameWindowFlags.Default, DisplayDevice.Default)
         {
-            if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            // if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
             //Width = (int)(DisplayDevice.Default.Width / 1.5);
             //Height = (int)((double)Width / settings.width * settings.height);
             Width = settings.preview_width;
@@ -510,7 +513,7 @@ void main()
             postShaderMask = MakeShader(postShaderVert, postShaderFragAlphaMask);
             postShaderMaskColor = MakeShader(postShaderVert, postShaderFragAlphaMaskColor);
             postShaderDownscale = MakeShader(postShaderVert, postShaderFragDownscale);
-            postShaderBlackFill = MakeShader(postShaderVert, postShaderFragBlackFill);
+            // postShaderBlackFill = MakeShader(postShaderVert, postShaderFragBlackFill);
 
             uDownscaleRes = GL.GetUniformLocation(postShaderDownscale, "res");
             uDownscaleFac = GL.GetUniformLocation(postShaderDownscale, "factor");
@@ -573,7 +576,7 @@ void main()
         long lastBGChangeTime = -1;
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            // if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
             // Task.Factory.StartNew(() => PlaybackLoop(), TaskCreationOptions.LongRunning);
             var PlaybackLoopTask = new Task(() => PlaybackLoop(), TaskCreationOptions.LongRunning);
             PlaybackLoopTask.Start();
@@ -593,6 +596,10 @@ void main()
             frameStartTime = DateTime.Now.Ticks;
             if (settings.timeBasedNotes) microsecondsPerTick = 10000;
             else microsecondsPerTick = (long)(lastTempo / midi.division * 10);
+            // variables
+            var downscaleWidth = settings.width / settings.downscale;
+            var downscaleHeight = settings.height / settings.downscale;
+            // end
             while (settings.running && (noNoteFrames < settings.fps * 5 || midi.unendedTracks != 0))
             {
                 if (!settings.Paused || settings.forceReRender)
@@ -633,12 +640,12 @@ void main()
                                         var r = render.disposeQueue.Dequeue();
                                         if (r.Initialized)
                                         {
-                                            try
-                                            {
+                                            //try
+                                            //{
                                                 r.Dispose();
-                                            }
-                                            catch { }
-                                            GC.Collect();
+                                            //}
+                                            //catch { }
+                                            //GC.Collect();
                                         }
                                     }
                                 }
@@ -753,7 +760,7 @@ void main()
 
                 downscaleBuff.BindBuffer();
                 GL.Clear(ClearBufferMask.ColorBufferBit);
-                GL.Viewport(0, 0, settings.width / settings.downscale, settings.height / settings.downscale);
+                GL.Viewport(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight);
                 if (bgTexID != -1)
                 {
                     GL.UseProgram(postShaderFlip);
@@ -765,7 +772,7 @@ void main()
                 {
                     GL.UseProgram(postShaderDownscale);
                     GL.Uniform1(uDownscaleFac, settings.downscale);
-                    GL.Uniform2(uDownscaleRes, new Vector2(settings.width / settings.downscale, settings.height / settings.downscale));
+                    GL.Uniform2(uDownscaleRes, new Vector2(/*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight));
                 }
                 else
                 {
@@ -793,11 +800,11 @@ void main()
                     finalCompositeBuff.BindTexture();
                     ffmpegOutputBuff.BindBuffer();
                     GL.Clear(ClearBufferMask.ColorBufferBit);
-                    GL.Viewport(0, 0, settings.width / settings.downscale, settings.height / settings.downscale);
+                    GL.Viewport(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight);
                     downscaleBuff.BindTexture();
                     DrawScreenQuad();
                     IntPtr unmanagedPointer = Marshal.AllocHGlobal(pixels.Length);
-                    GL.ReadPixels(0, 0, settings.width / settings.downscale, settings.height / settings.downscale, PixelFormat.Bgra, PixelType.UnsignedByte, unmanagedPointer);
+                    GL.ReadPixels(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight, PixelFormat.Bgra, PixelType.UnsignedByte, unmanagedPointer);
                     Marshal.Copy(unmanagedPointer, pixels, 0, pixels.Length);
 
                     if (lastRenderPush != null) lastRenderPush.GetAwaiter().GetResult();
@@ -813,11 +820,12 @@ void main()
                         GL.UseProgram(postShaderMask);
                         ffmpegOutputBuff.BindBuffer();
                         GL.Clear(ClearBufferMask.ColorBufferBit);
-                        GL.Viewport(0, 0, settings.width / settings.downscale, settings.height / settings.downscale);
+                        GL.Viewport(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight);
                         downscaleBuff.BindTexture();
                         DrawScreenQuad();
                         unmanagedPointer = Marshal.AllocHGlobal(pixelsmask.Length);
-                        GL.ReadPixels(0, 0, settings.width / settings.downscale, settings.height / settings.downscale, PixelFormat.Bgra, PixelType.UnsignedByte, unmanagedPointer);
+                        GL.ReadPixels(0, 0, /*settings.width / settings.downscale*/downscaleWidth
+                            , /*settings.height / settings.downscale*/downscaleHeight, PixelFormat.Bgra, PixelType.UnsignedByte, unmanagedPointer);
                         Marshal.Copy(unmanagedPointer, pixelsmask, 0, pixelsmask.Length);
 
                         if (lastRenderPush != null) lastRenderPush.GetAwaiter().GetResult();
@@ -828,12 +836,14 @@ void main()
                         Marshal.FreeHGlobal(unmanagedPointer);
                     }
                 }
-
+                // move GL.UseProgram(postShader)
+                GL.UseProgram(postShader);
+                // = =
                 GLPostbuffer.UnbindBuffers();
                 GL.Clear(ClearBufferMask.ColorBufferBit);
-                GL.UseProgram(postShaderBlackFill);
-                DrawScreenQuad();
-                GL.UseProgram(postShader);
+                //GL.UseProgram(postShaderBlackFill);
+                //DrawScreenQuad();
+                //GL.UseProgram(postShader);
                 GL.Viewport(0, 0, Width, Height);
                 downscaleBuff.BindTexture();
                 DrawScreenQuad();
@@ -870,25 +880,25 @@ void main()
                 }
             }
             Console.WriteLine("Disposing current renderer");
-            try
-            {
+            //try
+            //{
                 render.renderer.Dispose();
-            }
-            catch { }
-            try
+            //}
+            //catch { }
+            //try
             {
                 Console.WriteLine("Disposing of other renderers");
                 while (render.disposeQueue.Count != 0)
                 {
                     var r = render.disposeQueue.Dequeue();
-                    try
-                    {
+                    //try
+                    //{
                         if (r.Initialized) r.Dispose();
-                    }
-                    catch { }
+                    //}
+                    //catch { }
                 }
             }
-            catch (InvalidOperationException) { }
+            //catch (InvalidOperationException) { }
             Console.WriteLine("Disposed of renderers");
 
             globalDisplayNotes = null;
@@ -918,6 +928,8 @@ void main()
             GL.DeleteProgram(postShaderMask);
             GL.DeleteProgram(postShaderMaskColor);
             GL.DeleteProgram(postShaderDownscale);
+            // added
+            GL.DeleteProgram(postShaderFlip);
 
             midi = null;
             render = null;

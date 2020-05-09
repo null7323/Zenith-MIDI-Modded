@@ -18,7 +18,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
+using System.Management;
 using ZenithShared;
+using System.Security.Cryptography;
 
 namespace Zenith_MIDI
 {
@@ -161,7 +163,7 @@ namespace Zenith_MIDI
 
         Control pluginControl = null;
 
-        public List<IPluginRender> RenderPlugins = new List<IPluginRender>();
+        List<IPluginRender> RenderPlugins = new List<IPluginRender>();
 
         CurrentRendererPointer renderer = new CurrentRendererPointer();
 
@@ -270,6 +272,18 @@ namespace Zenith_MIDI
             }*/
         }
 
+        public long GetMemory()
+        {
+            ManagementClass wmiClass = new ManagementClass("Win32_PhysicalMemory");
+            ManagementObjectCollection collection = wmiClass.GetInstances();
+            long MemoryCapacity = 0;
+            foreach (var mo in collection)
+            {
+                MemoryCapacity += (long)Math.Round((decimal)(Int64.Parse(mo.Properties["Capacity"].Value.ToString()) / 1024 / 1024), 0);
+            }
+            return MemoryCapacity;
+        }
+
         public MainWindow()
         {
             // CheckUpdateDownloaded();
@@ -304,13 +318,13 @@ namespace Zenith_MIDI
 
 
             // windowTabs.VersionName = metaSettings.VersionName;
-            windowTabs.VersionName = "Mod 6.0";
+            windowTabs.VersionName = "Mod 6.11";
 
-            SourceInitialized += (s, e) =>
+            /*SourceInitialized += (s, e) =>
             {
                 IntPtr handle = (new WindowInteropHelper(this)).Handle;
                 HwndSource.FromHwnd(handle).AddHook(new HwndSourceHook(WindowProc));
-            };
+            };*/
 
             tempoMultSlider.nudToSlider = v => Math.Log(v, 2);
             tempoMultSlider.sliderToNud = v => Math.Pow(2, v);
@@ -440,9 +454,20 @@ namespace Zenith_MIDI
             // reset threads for rendering
             filterThreadsForRender.Value = settings.filterThreadsForRender;
             Console.WriteLine("Found " + filterThreadsForRender.Value + " logic processors");
+            // set max memory
+            maxRenderMemory.Value = settings.maxRenderRAM = GetMemory() / 2;
+            Console.WriteLine("Max render memory has been set to: " + maxRenderMemory.Value + " MBytes");
             // set width and height
-            previewWidthSelect.Value = settings.preview_width;
-            previewHeightSelect.Value = settings.preview_height;
+            try
+            {
+                previewWidthSelect.Value = settings.preview_width = OpenTK.DisplayDevice.Default.Width / 3 * 2;
+                previewHeightSelect.Value = settings.preview_height = OpenTK.DisplayDevice.Default.Width * 3 / 8;
+            }
+            catch
+            {
+
+            }
+            
             // set priority
             if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
             var CurrProcess = Process.GetCurrentProcess();
@@ -465,11 +490,13 @@ namespace Zenith_MIDI
             });
             winthread.Start();
             SpinWait.SpinUntil(() => winStarted);
+            // waste var
             // double time = 0;
+            // end
             int nc = -1;
-            long maxRam = 0;
-            long avgRam = 0;
-            long ramSample = 0;
+            //long maxRam = 0;
+            //long avgRam = 0;
+            //long ramSample = 0;
             Stopwatch timewatch = new Stopwatch();
             timewatch.Start();
             IPluginRender render = null;
@@ -502,16 +529,8 @@ namespace Zenith_MIDI
                     //bool manualDelete = false;
                     //double noteCollectorOffset = 0;
                     //bool receivedInfo = false;
-                    try
+                    while (!receivedInfo)
                     {
-                        while (!receivedInfo)
-                        {
-                            render = renderer.renderer;
-                            receivedInfo = true;
-                        }
-                    }
-                    catch { }
-                    /*while (!receivedInfo)
                         try
                         {
                             render = renderer.renderer;
@@ -519,8 +538,8 @@ namespace Zenith_MIDI
                         }
                         catch
                         { }
-                    */
-                    cutoffTime = win.midiTime;
+                    }
+                    cutoffTime = (long)win.midiTime;
                     manualDelete = render.ManualNoteDelete;
                     noteCollectorOffset = render.NoteCollectorOffset;
                     cutoffTime += noteCollectorOffset;
@@ -543,7 +562,8 @@ namespace Zenith_MIDI
                                     i.Remove();
                                 if (n.start > cutoffTime) break;
                             }
-                        GC.Collect();
+                        // remove 'GC.Collect()' to improve performance
+                        // GC.Collect();
                     }
                     try
                     {
@@ -560,9 +580,17 @@ namespace Zenith_MIDI
                     {
                     }
                     long ram = Process.GetCurrentProcess().PrivateMemorySize64;
-                    if (maxRam < ram) maxRam = ram;
-                    avgRam = (long)((double)avgRam * ramSample + ram) / (ramSample + 1);
-                    ramSample++;
+                    //if (maxRam < ram) maxRam = ram;
+                    // control the freq of GC
+                    if (ram / 1024 / 1024  > settings.maxRenderRAM) 
+                    {
+                        Console.Title = "Zenith Mod 6.11 (Collecting Unused Memory...)";
+                        GC.Collect();
+                        Console.Title = "Zenith Mod 6.11";
+                        //maxRam = ram;
+                    }
+                    //avgRam = (long)((double)avgRam * ramSample + ram) / (ramSample + 1);
+                    //ramSample++;
                     lastWinTime = win.midiTime;
                     Stopwatch s = new Stopwatch();
                     s.Start();
@@ -573,7 +601,8 @@ namespace Zenith_MIDI
                         (win.tempoFrameStep * 10 * settings.tempoMultiplier * (win.lastMV > 1 ? win.lastMV : 1))) > midifile.currentSyncTime ||
                         lastWinTime != win.midiTime || render != renderer.renderer || !settings.running
                     )
-                    ); ;
+                    );
+                    // GC.Collect();
                 }
             }
             catch (Exception ex)
@@ -591,7 +620,7 @@ namespace Zenith_MIDI
             GC.WaitForFullGCComplete();
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine(
-                    "Finished render\nMinutes to render: " + Math.Round((double)timewatch.ElapsedMilliseconds / 1000 / 60 * 100) / 100);
+                    "Finished render\nMinutes to render: " + Math.Round((double)timewatch.ElapsedMilliseconds / 600) / 100);
             Console.ResetColor();
             Dispatcher.Invoke(() =>
             {
@@ -617,9 +646,9 @@ namespace Zenith_MIDI
                 {
                     try
                     {
-                        var DLL = Assembly.UnsafeLoadFrom(System.IO.Path.GetFullPath(d));
+                        var DLL = Assembly.UnsafeLoadFrom(Path.GetFullPath(d));
                         bool hasClass = false;
-                        var name = System.IO.Path.GetFileName(d);
+                        var name = Path.GetFileName(d);
                         try
                         {
                             foreach (Type type in DLL.GetExportedTypes())
@@ -772,6 +801,7 @@ namespace Zenith_MIDI
             settings.filterThreadsForRender = (int)filterThreadsForRender.Value;
             settings.preview_width = (int)previewWidthSelect.Value;
             settings.preview_height = (int)previewHeightSelect.Value;
+            settings.maxRenderRAM = (long)maxRenderMemory.Value;
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.RunContinuationsAsynchronously | TaskCreationOptions.LongRunning);
             Resources["notPreviewing"] = false;
         }
@@ -852,6 +882,8 @@ namespace Zenith_MIDI
 
             settings.preview_width = (int)previewWidthSelect.Value;
             settings.preview_height = (int)previewHeightSelect.Value;
+
+            settings.maxRenderRAM = (long)maxRenderMemory.Value;
 
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
             Resources["notPreviewing"] = false;

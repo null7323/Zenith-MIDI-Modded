@@ -279,7 +279,7 @@ namespace Zenith_MIDI
             long MemoryCapacity = 0;
             foreach (var mo in collection)
             {
-                MemoryCapacity += (long)Math.Round((decimal)(Int64.Parse(mo.Properties["Capacity"].Value.ToString()) / 1024 / 1024), 0);
+                MemoryCapacity += (long)Math.Round((decimal)(long.Parse(mo.Properties["Capacity"].Value.ToString()) / 1024 / 1024), 0);
             }
             return MemoryCapacity;
         }
@@ -318,7 +318,7 @@ namespace Zenith_MIDI
 
 
             // windowTabs.VersionName = metaSettings.VersionName;
-            windowTabs.VersionName = "Mod 6.11";
+            windowTabs.VersionName = "Mod 6.1.2";
 
             /*SourceInitialized += (s, e) =>
             {
@@ -333,11 +333,13 @@ namespace Zenith_MIDI
 
             if (!File.Exists("Settings/settings.json"))
             {
-                var sett = new JObject();
-                sett.Add("defaultBackground", "");
-                sett.Add("ignoreKDMAPI", "false");
-                sett.Add("defaultPlugin", "Classic");
-                sett.Add("ignoreLanguageUpdates", "false");
+                var sett = new JObject
+                {
+                    { "defaultBackground", "" },
+                    { "ignoreKDMAPI", "false" },
+                    { "defaultPlugin", "Classic" },
+                    { "ignoreLanguageUpdates", "false" }
+                };
                 File.WriteAllText("Settings/settings.json", JsonConvert.SerializeObject(sett));
             }
 
@@ -390,9 +392,10 @@ namespace Zenith_MIDI
             settings = new RenderSettings();
             settings.PauseToggled += ToggledPause;
             InitialiseSettingsValues();
-            creditText.Text = "Video was rendered with Zenith Modded\nhttps://arduano.github.io/Zenith-MIDI/start";
+            //creditText.Text = "Video was rendered with Zenith Modded\nhttps://arduano.github.io/Zenith-MIDI/start";
+            creditText.Text = "Video was rendered with Zenith Modded\nhttps://github.com/noob601/Zenith-MIDI-Modded";
 
-            if(languageLoader != null) languageLoader.Wait();
+            if (languageLoader != null) languageLoader.Wait();
 
             var languagePacks = Directory.GetDirectories("Languages");
             foreach (var language in languagePacks)
@@ -450,6 +453,8 @@ namespace Zenith_MIDI
             vsyncEnabled.IsChecked = settings.vsync;
             tempoMultSlider.Value = settings.tempoMultiplier;
 
+            enableMaxMemory.IsChecked = settings.enableMemoryLimit;
+
             ReloadPlugins();
             // reset threads for rendering
             filterThreadsForRender.Value = settings.filterThreadsForRender;
@@ -469,7 +474,7 @@ namespace Zenith_MIDI
             }
             
             // set priority
-            if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            Thread.CurrentThread.Priority = ThreadPriority.Highest;
             var CurrProcess = Process.GetCurrentProcess();
             CurrProcess.PriorityClass = ProcessPriorityClass.High;
             Console.WriteLine("Current priority has been set to: Hightest.");
@@ -582,7 +587,7 @@ namespace Zenith_MIDI
                     long ram = Process.GetCurrentProcess().PrivateMemorySize64;
                     //if (maxRam < ram) maxRam = ram;
                     // control the freq of GC
-                    if (ram / 1024 / 1024  > settings.maxRenderRAM) 
+                    if (settings.enableMemoryLimit && ram / 1024 / 1024  > settings.maxRenderRAM) 
                     {
                         Console.Title = "Zenith Mod 6.11 (Collecting Unused Memory...)";
                         GC.Collect();
@@ -802,6 +807,8 @@ namespace Zenith_MIDI
             settings.preview_width = (int)previewWidthSelect.Value;
             settings.preview_height = (int)previewHeightSelect.Value;
             settings.maxRenderRAM = (long)maxRenderMemory.Value;
+            settings.enableMemoryLimit = enableMaxMemory.IsChecked;
+
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.RunContinuationsAsynchronously | TaskCreationOptions.LongRunning);
             Resources["notPreviewing"] = false;
         }
@@ -884,6 +891,7 @@ namespace Zenith_MIDI
             settings.preview_height = (int)previewHeightSelect.Value;
 
             settings.maxRenderRAM = (long)maxRenderMemory.Value;
+            settings.enableMemoryLimit = enableMaxMemory.IsChecked;
 
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
             Resources["notPreviewing"] = false;
@@ -960,6 +968,13 @@ namespace Zenith_MIDI
                 if (p.Initialized) renderer.disposeQueue.Enqueue(p);
             }
             SelectRenderer(pluginsList.SelectedIndex);
+        }
+
+        // Click of Enable Max Memory
+        private void EnableMaxMemory_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (settings == null) return;
+            settings.enableMemoryLimit = enableMaxMemory.IsChecked;
         }
 
         private void ResolutionPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)

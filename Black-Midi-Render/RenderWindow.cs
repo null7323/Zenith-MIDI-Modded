@@ -599,6 +599,7 @@ void main()
             // variables
             var downscaleWidth = settings.width / settings.downscale;
             var downscaleHeight = settings.height / settings.downscale;
+            var Vector = new Vector2(downscaleWidth, downscaleHeight);
             // end
             while (settings.running && (noNoteFrames < settings.fps * 5 || midi.unendedTracks != 0))
             {
@@ -640,11 +641,11 @@ void main()
                                         var r = render.disposeQueue.Dequeue();
                                         if (r.Initialized)
                                         {
-                                            //try
-                                            //{
+                                            try
+                                            {
                                                 r.Dispose();
-                                            //}
-                                            //catch { }
+                                            }
+                                            catch { }
                                             //GC.Collect();
                                         }
                                     }
@@ -772,7 +773,8 @@ void main()
                 {
                     GL.UseProgram(postShaderDownscale);
                     GL.Uniform1(uDownscaleFac, settings.downscale);
-                    GL.Uniform2(uDownscaleRes, new Vector2(/*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight));
+                    // GL.Uniform2(uDownscaleRes, new Vector2(/*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight));
+                    GL.Uniform2(uDownscaleRes, Vector);
                 }
                 else
                 {
@@ -797,20 +799,23 @@ void main()
                         GL.UseProgram(postShader);
                     else
                         GL.UseProgram(postShaderMaskColor);
-                    finalCompositeBuff.BindTexture();
+                    // line 782 has called
+                    // finalCompositeBuff.BindTexture();
                     ffmpegOutputBuff.BindBuffer();
                     GL.Clear(ClearBufferMask.ColorBufferBit);
-                    GL.Viewport(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight);
+                    // line 763 has called
+                    // GL.Viewport(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight);
                     downscaleBuff.BindTexture();
                     DrawScreenQuad();
-                    IntPtr unmanagedPointer = Marshal.AllocHGlobal(pixels.Length);
+                    var pixelsLength = pixels.Length;
+                    IntPtr unmanagedPointer = Marshal.AllocHGlobal(pixelsLength);
                     GL.ReadPixels(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight, PixelFormat.Bgra, PixelType.UnsignedByte, unmanagedPointer);
-                    Marshal.Copy(unmanagedPointer, pixels, 0, pixels.Length);
+                    Marshal.Copy(unmanagedPointer, pixels, 0, pixelsLength);
 
                     if (lastRenderPush != null) lastRenderPush.GetAwaiter().GetResult();
                     lastRenderPush = Task.Run(() =>
                     {
-                        ffmpegvideo.StandardInput.BaseStream.Write(pixels, 0, pixels.Length);
+                        ffmpegvideo.StandardInput.BaseStream.Write(pixels, 0, pixelsLength);
                     });
                     Marshal.FreeHGlobal(unmanagedPointer);
 
@@ -820,8 +825,8 @@ void main()
                         GL.UseProgram(postShaderMask);
                         ffmpegOutputBuff.BindBuffer();
                         GL.Clear(ClearBufferMask.ColorBufferBit);
-                        GL.Viewport(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight);
-                        downscaleBuff.BindTexture();
+                        // GL.Viewport(0, 0, /*settings.width / settings.downscale*/downscaleWidth, /*settings.height / settings.downscale*/downscaleHeight);
+                        // downscaleBuff.BindTexture();
                         DrawScreenQuad();
                         unmanagedPointer = Marshal.AllocHGlobal(pixelsmask.Length);
                         GL.ReadPixels(0, 0, /*settings.width / settings.downscale*/downscaleWidth
@@ -935,7 +940,7 @@ void main()
             render = null;
             Console.WriteLine("Closing window");
 
-            this.Close();
+            Close();
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)

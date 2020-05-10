@@ -69,7 +69,7 @@ namespace ZenithEngine
             info.noteCount = noteCount;
             info.tickLength = maxTrackTime;
             info.trackCount = trackcount;
-            tempoTickMultiplier = (double)division / 500000 * 1000;
+            tempoTickMultiplier = (double)division / 500;
         }
 
         void AssertText(string text)

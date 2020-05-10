@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace ZenithEngine
 {
@@ -681,7 +682,7 @@ namespace ZenithEngine
         }
 
         public FastList<Tempo> TempoEvents = new FastList<Tempo>();
-        public void ParseNextEventFast()
+        /*public void ParseNextEventFast()
         {
             try
             {
@@ -917,6 +918,238 @@ namespace ZenithEngine
             }
             catch
             { }
+        }*/
+        public void ParseNextEventFast()
+        {
+            try
+            {
+                trackTime += ReadVariableLen();
+                byte command = reader.Read();
+                if (command < 0x80)
+                {
+                    reader.Pushback = command;
+                    command = prevCommand;
+                }
+                prevCommand = command;
+                byte comm = (byte)(command & 0b11110000);
+                int channel;
+                byte ss;
+                switch (comm)
+                {
+                    case 0b10010000:
+                        channel = command & 0b00001111;
+                        reader.Skip(1);
+                        byte vel = reader.Read();
+                        if (vel != 0)
+                            ++noteCount;
+                        break;
+                    case 0b10000000:
+                        channel = command & 0b00001111;
+                        reader.Skip(2);
+                        break;
+                    case 0b10100000:
+                        channel = command & 0b00001111;
+                        reader.Skip(2);
+                        break;
+                    case 0b11000000:
+                        channel = command & 0b00001111;
+                        reader.Skip(1);
+                        break;
+                    case 0b11010000:
+                        channel = command & 0b00001111;
+                        reader.Skip(1);
+                        break;
+                    case 0b11100000:
+                        channel = command & 0b00001111;
+                        reader.Skip(2);
+                        break;
+                    case 0b10110000:
+                        channel = command & 0b00001111;
+                        reader.Skip(2);
+                        break;
+                    default:
+                        switch (command)
+                        {
+                            case 0b11110000:
+                                while (reader.Read() != 0b11110111) ;
+                                break;
+                            case 0b11110100:
+                                break;
+                            case 0b11110001:
+                                break;
+                            case 0b11110101:
+                                break;
+                            case 0b11111001:
+                                break;
+                            case 0b11111101:
+                                break;
+                            case 0b11110010:
+                                channel = command & 0b00001111;
+                                reader.Skip(2);
+                                break;
+                            case 0b11110011:
+                                ss = reader.Read();
+                                break;
+                            case 0b11110110:
+                                break;
+                            case 0b11110111:
+                                break;
+                            case 0b11111000:
+                                break;
+                            case 0b11111010:
+                                break;
+                            case 0b11111100:
+                                break;
+                            case 0b11111110:
+                                break;
+                            case 0xFF:
+                                command = reader.Read();
+                                bool hasMatched = false;
+                                if (command == 0x00)
+                                {
+                                    if (reader.Read() != 2)
+                                    {
+                                        throw new Exception("Corrupt Track");
+                                    }
+                                    hasMatched = true;
+                                }
+                                else if (command >= 0x01 && command <= 0x0A)
+                                {
+                                    int size = (int)ReadVariableLen();
+                                    if (command != 0x0A || trackTime != 0)
+                                    {
+                                        reader.Skip(size);
+                                    }
+                                    else
+                                    {
+                                        byte[] data = new byte[size];
+                                        for (int i = 0; i < size; i++)
+                                        {
+                                            data[i] = reader.Read();
+                                        }
+                                        if (data.Length == 8 || data.Length == 12)
+                                        {
+                                            if (data[0] == 0x00 &&
+                                                data[1] == 0x0F)
+                                            {
+                                                Color4 col1 = new Color4(data[4], data[5], data[6], data[7]);
+                                                Color4 col2;
+                                                if (data.Length == 12)
+                                                    col2 = new Color4(data[8], data[9], data[10], data[11]);
+                                                else col2 = col1;
+                                                if (data[2] < 0x10)
+                                                {
+                                                    zeroTickTrkColors[data[2]] = new NoteColor() { left = col1, right = col2 };
+                                                }
+                                                else if (data[2] == 0x7F)
+                                                {
+                                                    for (int i = 0; i < 16; i++)
+                                                        zeroTickTrkColors[i] = new NoteColor() { left = col1, right = col2 };
+                                                }
+                                            }
+                                        }
+                                    }
+                                    hasMatched = true;
+                                }
+                                if (!hasMatched)
+                                {
+                                    switch (command)
+                                    {
+                                        case 0x20:
+                                            command = reader.Read();
+                                            if (command != 1)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            channelPrefix = reader.Read();
+                                            break;
+                                        case 0x21:
+                                            command = reader.Read();
+                                            if (command != 1)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            reader.Skip(1);
+                                            break;
+                                        //TODO:  MIDI port
+                                        case 0x2F:
+                                            command = reader.Read();
+                                            if (command != 0)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            EndTrack();
+                                            break;
+                                        case 0x51:
+                                            command = reader.Read();
+                                            if (command != 3)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            int btempo = 0;
+                                            for (int i = 0; i != 3; i++)
+                                                btempo = (int)((btempo << 8) | reader.Read());
+                                            if (trackTime == 0)
+                                            {
+                                                zerothTempo = btempo;
+                                            }
+
+                                            Tempo t = new Tempo
+                                            {
+                                                pos = trackTime,
+                                                tempo = btempo
+                                            };
+                                            TempoEvents.Add(t);
+                                            break;
+
+                                        case 0x54:
+                                            command = reader.Read();
+                                            if (command != 5)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            reader.Skip(4);
+                                            break;
+                                        case 0x58:
+                                            command = reader.Read();
+                                            if (command != 4)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            int nn = reader.ReadFast();
+                                            int dd = reader.ReadFast();
+                                            dd = (int)Math.Pow(2, dd);
+                                            foundTimeSig = new TimeSignature() { numerator = nn, denominator = dd };
+                                            reader.Skip(2);
+                                            break;
+                                        case 0x59:
+                                            command = reader.Read();
+                                            if (command != 2)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            reader.Skip(2);
+                                            //TODO: Key Signature
+                                            break;
+                                        case 0x7F:
+                                            int size = (int)ReadVariableLen();
+                                            reader.Skip(size);
+                                            break;
+                                        default:
+                                            throw new Exception("Corrupt Track");
+                                            // break;
+                                    }
+                                }
+                                break;
+                        }
+                        break;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+                EndTrack();
+            }
+            catch { }
         }
 
         public void Dispose()

@@ -100,5 +100,7 @@ namespace ZenithEngine
         public double noteBufferSizeRadio = 1;
         // max render memory
         public long maxRenderRAM = 8192;
+        // enable memory limit (or not)
+        public bool enableMemoryLimit = true;
     }
 }

@@ -131,10 +131,10 @@ void main()
             SettingsControl = new SettingsCtrl(this.settings);
             ((SettingsCtrl)SettingsControl).PaletteChanged += () => { ReloadTrackColors(); };
             PreviewImage = BitmapToImageSource(Properties.Resources.preview);
-            for (int i = 0; i < blackKeys.Length; i++) blackKeys[i] = isBlackNote(i);
+            for (int i = 0; i < blackKeys.Length; ++i) blackKeys[i] = isBlackNote(i);
             int b = 0;
             int w = 0;
-            for (int i = 0; i < keynum.Length; i++)
+            for (int i = 0; i < keynum.Length; ++i)
             {
                 if (blackKeys[i]) keynum[i] = b++;
                 else keynum[i] = w++;
@@ -264,7 +264,7 @@ void main()
 
             double deltaTimeOnScreen = NoteScreenTime;
             double pianoHeight = settings.pianoHeight;
-            bool sameWidth = settings.sameWidthNotes;
+            // bool sameWidth = settings.sameWidthNotes;
             for (int i = 0; i < 514; i++) keyColors[i] = Color4.Transparent;
             for (int i = 0; i < 256; i++) keyPressed[i] = false;
             double wdth;
@@ -304,13 +304,28 @@ void main()
                         wdth = 0.6f / (knmln - knmfn + 1);
                         int bknum = keynum[i] % 5;
                         double offset = wdth / 2;
-                        if (bknum == 0 || bknum == 2)
+                        //if (bknum == 0 || bknum == 2)
+                        //{
+                        //    offset *= 1.3;
+                        //}
+                        //else if (bknum == 1 || bknum == 4)
+                        //{
+                        //    offset *= 0.7;
+                        //}
+                        switch (bknum)
                         {
-                            offset *= 1.3;
-                        }
-                        else if (bknum == 1 || bknum == 4)
-                        {
-                            offset *= 0.7;
+                            case 0:
+                                offset *= 1.3;
+                                break;
+                            case 2:
+                                offset *= 1.3;
+                                break;
+                            case 1:
+                                offset *= 0.7;
+                                break;
+                            case 4:
+                                offset *= 0.7;
+                                break;
                         }
                         x1array[i] = (float)(keynum[_i] - knmfn) / (knmln - knmfn + 1) - offset;
                         wdtharray[i] = wdth;
@@ -944,21 +959,21 @@ void main()
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 2 * 8 * 4),
+                (IntPtr)(quadBufferPos * 64),
                 quadVertexbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Double, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, colorBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 4 * 4 * 4),
+                (IntPtr)(quadBufferPos * 64),
                 quadColorbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 16, 0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, attribBufferID);
             GL.BufferData(
                 BufferTarget.ArrayBuffer,
-                (IntPtr)(quadBufferPos * 2 * 8 * 4),
+                (IntPtr)(quadBufferPos * 64),
                 quadAttribbuff,
                 BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Double, false, 16, 0);
@@ -970,7 +985,7 @@ void main()
 
         bool isBlackNote(int n)
         {
-            n = n % 12;
+            n %= 12;
             return n == 1 || n == 3 || n == 6 || n == 8 || n == 10;
         }
     }

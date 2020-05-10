@@ -10,7 +10,7 @@
         mc:Ignorable="d"
         TextOptions.TextFormattingMode="Ideal" 
         TextOptions.TextRenderingMode="Auto" WindowStyle="None"
-        Title="Zenith" Height="600" Width="900" MinWidth="780" MinHeight="550" Closing="Window_Closing"
+        Title="Zenith Modded" Height="600" Width="900" MinWidth="780" MinHeight="550" Closing="Window_Closing"
         Background="#171717" Name="mainWindow">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="40"/>
@@ -213,7 +213,7 @@
                                                     </DockPanel>
                                                     <DockPanel LastChildFill="False" VerticalAlignment="Top" Margin="0,5,0,0">
                                                         <Label Content="{DynamicResource previewWidthLabel}" VerticalAlignment="Top" Margin="0,5,0,0" HorizontalAlignment="Left"/>
-                                                        <ui:NumberSelect x:Name="previewWidthSelect" VerticalAlignment="Top" Margin="10,5,0,0" HorizontalAlignment="Left" Minimum="1" Maximum="15360" Width="88" Value="1920" DockPanel.Dock="Left" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}"/>
+                                                        <ui:NumberSelect x:Name="previewWidthSelect" VerticalAlignment="Top" Margin="10,5,0,0" HorizontalAlignment="Left" Minimum="1" Maximum="15360" Width="93" Value="1920" DockPanel.Dock="Left" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}"/>
                                                     </DockPanel>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1">
@@ -235,7 +235,7 @@
                                                     </DockPanel>
                                                     <DockPanel>
                                                         <Label Content="{DynamicResource previewHeightLabel}" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left"/>
-                                                        <ui:NumberSelect x:Name="previewHeightSelect" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left" Minimum="1" Maximum="8640" Width="88" Value="1280" DockPanel.Dock="Left" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}"/>
+                                                        <ui:NumberSelect x:Name="previewHeightSelect" VerticalAlignment="Top" Margin="0,0,0,0" HorizontalAlignment="Left" Minimum="1" Maximum="8640" Width="93" Value="1280" DockPanel.Dock="Left" IsEnabled="{Binding ElementName=notPreviewingOrRendering, Path=IsEnabled}"/>
                                                     </DockPanel>
                                                 </StackPanel>
                                             </Grid>
@@ -421,8 +421,15 @@
                                 </TextBox>
                             </DockPanel>
                             <DockPanel LastChildFill="False" Margin="0,10,0,0" VerticalAlignment="Top">
-                                <Label Content="{DynamicResource maxMemory}" DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                <ui:NumberSelect x:Name="maxRenderMemory" Minimum="2048" Maximum="1024576" HorizontalAlignment="Left" VerticalAlignment="Top" Width="102" Margin="5,0,0,0" Value="8192" IsEnabled="{Binding IsEnabled, ElementName=notRendering}"/>
+                                <ui:BetterCheckbox x:Name="enableMaxMemory" Text="{DynamicResource maxMemory}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="0,7,0,0" CheckToggled="EnableMaxMemory_Toggled" IsEnabled="{Binding IsEnabled, ElementName=notRendering}"/>
+                                <ui:NumberSelect x:Name="maxRenderMemory" Minimum="2048" Maximum="1048576" HorizontalAlignment="Left" VerticalAlignment="Top" Width="102" Margin="5,0,0,0" Value="8192">
+                                    <ui:NumberSelect.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource AndValueConverter}">
+                                            <Binding ElementName="notRendering" Path="IsEnabled"/>
+                                            <Binding ElementName="enableMaxMemory" Path="IsChecked"/>
+                                        </MultiBinding>
+                                    </ui:NumberSelect.IsEnabled>
+                                </ui:NumberSelect>
                                 <Label Content="{DynamicResource delatStart}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="50,0,0,0"/>
                                 <ui:NumberSelect x:Name="secondsDelay" Value="0" Maximum="10" Minimum="0" HorizontalAlignment="Left" Width="82"  IsEnabled="{Binding IsEnabled, ElementName=notRendering}" DockPanel.Dock="Left" />
                             </DockPanel>
@@ -464,7 +471,7 @@
                             </DockPanel>
                         </StackPanel>
                         <DockPanel Margin="10">
-                            <TextBox DockPanel.Dock="Left" x:Name="creditText" Text="hhhh" AcceptsReturn="True" IsReadOnly="True" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" Width="321" VerticalAlignment="Bottom"/>
+                            <TextBox DockPanel.Dock="Left" x:Name="creditText" Text="hhhh" AcceptsReturn="True" IsReadOnly="True" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" Width="371" VerticalAlignment="Bottom"/>
                             <Label Content="{DynamicResource ifUploading}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom"/>
                         </DockPanel>
                         

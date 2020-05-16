@@ -179,11 +179,11 @@ void main()
         void loadImage(Bitmap image, int texID, bool loop, bool linear)
         {
             GL.BindTexture(TextureTarget.Texture2D, texID);
-            BitmapData data = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
+            BitmapData data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
                 ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
-                OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+                PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
 
             if (linear)
             {
@@ -525,6 +525,7 @@ void main()
         {
             // if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
             PlaybackEvent pe;
+            
             int timeJump;
             long now;
             playbackLoopStarted = true;

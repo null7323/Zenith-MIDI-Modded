@@ -21,7 +21,7 @@ namespace Zenith_MIDI
             try
             {
 #endif
-                Console.Title = "Zenith Mod 6.1.2";
+                Console.Title = "Zenith Mod 6.1.3";
                 Application app = new Application();
                 app.Run(new MainWindow());
 #if !DEBUG

@@ -74,6 +74,8 @@
     <system:String x:Key="encoders">Encoder For Rendering</system:String>
     <system:String x:Key="yuv">YUV</system:String>
     <system:String x:Key="maxMemory">Max Render Memory (MBytes)</system:String>
+    <system:String x:Key="autoDisableKDMAPI">Disable KDMAPI when rendering</system:String>
+    <system:String x:Key="enableMemorySaving">Memory Saving (Slower!)</system:String>
     <!--End-->
     
     <!--NEW 1.5-->

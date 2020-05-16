@@ -245,7 +245,7 @@ namespace Zenith_MIDI
 
         void CheckUpdateDownloaded()
         {
-            if(metaSettings.PreviousVersion != metaSettings.VersionName)
+            if (metaSettings.PreviousVersion != metaSettings.VersionName)
             {
                 if (File.Exists("settings.json")) File.Delete("settings.json");
                 metaSettings.PreviousVersion = metaSettings.VersionName;
@@ -318,7 +318,7 @@ namespace Zenith_MIDI
 
 
             // windowTabs.VersionName = metaSettings.VersionName;
-            windowTabs.VersionName = "Mod 6.1.2";
+            windowTabs.VersionName = "Mod 6.1.3";
 
             /*SourceInitialized += (s, e) =>
             {
@@ -454,6 +454,7 @@ namespace Zenith_MIDI
             tempoMultSlider.Value = settings.tempoMultiplier;
 
             enableMaxMemory.IsChecked = settings.enableMemoryLimit;
+            autoDisableKDMAPI.IsChecked = settings.autoDisableKDMAPIWhenRendering;
 
             ReloadPlugins();
             // reset threads for rendering
@@ -472,6 +473,8 @@ namespace Zenith_MIDI
             {
 
             }
+            // set memory saving mode
+            enableMemorySaving.IsChecked = settings.enableMemorySavingMode;
             
             // set priority
             Thread.CurrentThread.Priority = ThreadPriority.Highest;
@@ -485,7 +488,13 @@ namespace Zenith_MIDI
         RenderWindow win = null;
         void RunRenderWindow()
         {
-            // if (Thread.CurrentThread.Priority != ThreadPriority.Highest) Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            // Thread.CurrentThread.Priority = ThreadPriority.Highest;
+            if (settings.autoDisableKDMAPIWhenRendering && settings.ffRender && foundOmniMIDI)
+            {
+                Console.WriteLine("Disabling KDMAPI...");
+                KDMAPI.TerminateKDMAPIStream();
+                Console.WriteLine("Disabled!");
+            }
             bool winStarted = false;
             Task winthread = new Task(() =>
             {
@@ -498,7 +507,7 @@ namespace Zenith_MIDI
             // waste var
             // double time = 0;
             // end
-            int nc = -1;
+            long nc = -1;
             //long maxRam = 0;
             //long avgRam = 0;
             //long ramSample = 0;
@@ -567,8 +576,8 @@ namespace Zenith_MIDI
                                     i.Remove();
                                 if (n.start > cutoffTime) break;
                             }
-                        // remove 'GC.Collect()' to improve performance
                         // GC.Collect();
+                        if (settings.enableMemorySavingMode) GC.Collect();
                     }
                     try
                     {
@@ -587,11 +596,12 @@ namespace Zenith_MIDI
                     long ram = Process.GetCurrentProcess().PrivateMemorySize64;
                     //if (maxRam < ram) maxRam = ram;
                     // control the freq of GC
-                    if (settings.enableMemoryLimit && ram / 1024 / 1024  > settings.maxRenderRAM) 
+                    
+                    if (!settings.enableMemorySavingMode && settings.enableMemoryLimit && ram / 1024 / 1024  > settings.maxRenderRAM) 
                     {
-                        Console.Title = "Zenith Mod 6.11 (Collecting Unused Memory...)";
+                        Console.Title = "Zenith Mod 6.1.3 (Collecting Unused Memory...)";
                         GC.Collect();
-                        Console.Title = "Zenith Mod 6.11";
+                        Console.Title = "Zenith Mod 6.1.3";
                         //maxRam = ram;
                     }
                     //avgRam = (long)((double)avgRam * ramSample + ram) / (ramSample + 1);
@@ -627,6 +637,15 @@ namespace Zenith_MIDI
             Console.WriteLine(
                     "Finished render\nMinutes to render: " + Math.Round((double)timewatch.ElapsedMilliseconds / 600) / 100);
             Console.ResetColor();
+            if (settings.ffRender && settings.autoDisableKDMAPIWhenRendering)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    Console.WriteLine("Reloading KDMAPI...");
+                    KDMAPI.InitializeKDMAPIStream();
+                    Console.WriteLine("Loaded!");
+                });
+            }
             Dispatcher.Invoke(() =>
             {
                 Resources["notRendering"] = true;
@@ -808,6 +827,8 @@ namespace Zenith_MIDI
             settings.preview_height = (int)previewHeightSelect.Value;
             settings.maxRenderRAM = (long)maxRenderMemory.Value;
             settings.enableMemoryLimit = enableMaxMemory.IsChecked;
+            settings.autoDisableKDMAPIWhenRendering = autoDisableKDMAPI.IsChecked;
+            settings.enableMemorySavingMode = enableMemorySaving.IsChecked;
 
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.RunContinuationsAsynchronously | TaskCreationOptions.LongRunning);
             Resources["notPreviewing"] = false;
@@ -892,6 +913,9 @@ namespace Zenith_MIDI
 
             settings.maxRenderRAM = (long)maxRenderMemory.Value;
             settings.enableMemoryLimit = enableMaxMemory.IsChecked;
+
+            settings.autoDisableKDMAPIWhenRendering = autoDisableKDMAPI.IsChecked;
+            settings.enableMemorySavingMode = enableMemorySaving.IsChecked;
 
             renderThread = Task.Factory.StartNew(RunRenderWindow, TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
             Resources["notPreviewing"] = false;

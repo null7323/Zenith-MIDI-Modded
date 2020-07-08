@@ -418,8 +418,29 @@ void main()
             GL.GenBuffers(1, out colorBufferID);
             GL.GenBuffers(1, out uvBufferID);
             GL.GenBuffers(1, out texIDBufferID);
-            for (uint i = 0; i < indexes.Length / 6; i++)
+            for (uint i = 0; i < indexes.Length / 6; ++i)
             {
+                indexes[i * 6 + 0] = i * 4 + 0;
+                indexes[i * 6 + 1] = i * 4 + 1;
+                indexes[i * 6 + 2] = i * 4 + 3;
+                indexes[i * 6 + 3] = i * 4 + 1;
+                indexes[i * 6 + 4] = i * 4 + 3;
+                indexes[i * 6 + 5] = i * 4 + 2;
+                ++i;
+                indexes[i * 6 + 0] = i * 4 + 0;
+                indexes[i * 6 + 1] = i * 4 + 1;
+                indexes[i * 6 + 2] = i * 4 + 3;
+                indexes[i * 6 + 3] = i * 4 + 1;
+                indexes[i * 6 + 4] = i * 4 + 3;
+                indexes[i * 6 + 5] = i * 4 + 2;
+                ++i;
+                indexes[i * 6 + 0] = i * 4 + 0;
+                indexes[i * 6 + 1] = i * 4 + 1;
+                indexes[i * 6 + 2] = i * 4 + 3;
+                indexes[i * 6 + 3] = i * 4 + 1;
+                indexes[i * 6 + 4] = i * 4 + 3;
+                indexes[i * 6 + 5] = i * 4 + 2;
+                ++i;
                 indexes[i * 6 + 0] = i * 4 + 0;
                 indexes[i * 6 + 1] = i * 4 + 1;
                 indexes[i * 6 + 2] = i * 4 + 3;
@@ -780,9 +801,9 @@ void main()
             if (NoteColors == null) return;
             var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(NoteColors.Length);
 
-            for (int i = 0; i < NoteColors.Length; i++)
+            for (int i = 0, NoteColorsLength = NoteColors.Length; i < NoteColorsLength; i++)
             {
-                for (int j = 0; j < NoteColors[i].Length; j++)
+                for (int j = 0, EachColorLength = NoteColors[i].Length; j < EachColorLength; j++)
                 {
                     if (NoteColors[i][j].isDefault)
                     {

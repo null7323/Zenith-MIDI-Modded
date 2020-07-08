@@ -24,7 +24,7 @@ namespace TexturedRender
         public string LanguageDictName { get; } = "textured";
 
         #region Shaders
-        string quadShaderVert = @"#version 330 core
+        const string quadShaderVert = @"#version 330 core
 
 layout(location=0) in vec2 in_position;
 layout(location=1) in vec4 in_color;
@@ -43,7 +43,7 @@ void main()
     texid = in_texid;
 }
 ";
-        string quadShaderFrag = @"#version 330 core
+        const string quadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -82,7 +82,7 @@ void main()
     out_color = col * v2f_color;
 }
 ";
-        string invertQuadShaderFrag = @"#version 330 core
+        const string invertQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -126,7 +126,7 @@ void main()
     out_color.w = 1 - out_color.w;
 }
 ";
-        string evenQuadShaderFrag = @"#version 330 core
+        const string evenQuadShaderFrag = @"#version 330 core
 
 in vec4 v2f_color;
 in vec2 uv;
@@ -209,7 +209,7 @@ void main()
         void loadImage(Bitmap image, int texID, bool loop, bool linear = false)
         {
             GL.BindTexture(TextureTarget.Texture2D, texID);
-            BitmapData data = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
+            BitmapData data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
                 ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
@@ -528,7 +528,7 @@ void main()
 
             double deltaTimeOnScreen = settings.deltaTimeOnScreen;
             double viewAspect = (double)renderSettings.width / renderSettings.height;
-            double keyboardHeightFull = currPack.keyboardHeight / (lastNote - firstNote) * 128 / (1920.0 / 1080.0) * viewAspect;
+            double keyboardHeightFull = currPack.keyboardHeight / (lastNote - firstNote) * 128 / (16.0 / 9.0) * viewAspect;
             double keyboardHeight = keyboardHeightFull;
             double barHeight = keyboardHeightFull * currPack.barHeight;
             if (currPack.useBar) keyboardHeight -= barHeight;

@@ -23,9 +23,17 @@ namespace ZenithEngine
             get
             {
                 if (root.Next != null) return root.Next.item;
-                else return default(T);
+                else return default;
             }
         }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public T GetFirst()
+        {
+            if (root.Next != null) return root.Next.item;
+            else return default;
+        }
+
         public class Iterator
         {
             FastList<T> _ilist;
@@ -33,12 +41,14 @@ namespace ZenithEngine
             private ListItem prev;
             private ListItem curr;
 
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             internal Iterator(FastList<T> ll)
             {
                 _ilist = ll;
                 Reset();
             }
 
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             public bool MoveNext(out T v)
             {
                 ListItem ll = curr.Next;
@@ -58,6 +68,7 @@ namespace ZenithEngine
                 return true;
             }
 
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             public void Remove()
             {
                 if (_ilist.last.Equals(curr)) _ilist.last = prev;
@@ -81,6 +92,7 @@ namespace ZenithEngine
                 //}
             }
 
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             public void Reset()
             {
                 this.prev = null;
@@ -94,10 +106,12 @@ namespace ZenithEngine
 
             private ListItem curr;
 
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             internal FastIterator(FastList<T> ll)
             {
                 _ilist = ll;
-                Reset();
+                this.curr = _ilist.root;
+                // Reset();
             }
 
             public object Current => curr.item;
@@ -109,27 +123,34 @@ namespace ZenithEngine
 
             }
 
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                try
-                {
-                    curr = curr.Next;
+                //try
+                //{
+                //    curr = curr.Next;
 
-                    return curr != null;
-                }
-                catch { return false; }
+                //    return curr != null;
+                //}
+                //catch { return false; }
+                curr = curr.Next;
+                return curr != null;
             }
 
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             public void Reset()
             {
                 this.curr = _ilist.root;
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void Add(T item)
         {
-            ListItem li = new ListItem();
-            li.item = item;
+            ListItem li = new ListItem
+            {
+                item = item
+            };
 
             if (root.Next != null && last != null)
             {
@@ -142,6 +163,7 @@ namespace ZenithEngine
             last = li;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public T Pop()
         {
             ListItem el = root.Next;
@@ -149,6 +171,7 @@ namespace ZenithEngine
             return el.item;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public Iterator Iterate()
         {
             return new Iterator(this);
@@ -156,17 +179,20 @@ namespace ZenithEngine
 
         public bool ZeroLen => root.Next == null;
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public IEnumerator<T> FastIterate()
         {
             return new FastIterator(this);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void Unlink()
         {
             root.Next = null;
             last = null;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public int Count()
         {
             int cnt = 0;
@@ -186,14 +212,24 @@ namespace ZenithEngine
             return root.Next != null;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return FastIterate();
+            // return FastIterate();
+            return new FastIterator(this);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public IEnumerator<T> GetEnumerator()
         {
-            return FastIterate();
+            // return FastIterate();
+            return new FastIterator(this);
+            //ListItem li = root.Next;
+            //while (li != null)
+            //{
+            //    yield return li.item;
+            //    li = li.Next;
+            //}
         }
     }
 }

@@ -39,7 +39,7 @@
             </DockPanel>
             <ui:BetterCheckbox x:Name="sameWidth" Text="{DynamicResource sameWidthNotes}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" IsChecked="True" CheckToggled="SameWidth_Checked"/>
             <ui:BetterCheckbox Name="middleCSquare" Text="{DynamicResource middleCSquare}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" CheckToggled="MiddleCSquare_Checked"/>
-            <ui:BetterCheckbox x:Name="blackNotesAbove" Text="{DynamicResource blackNotesAbove}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" CheckToggled="BlackNotesAbove_Checked"/>
+            <ui:BetterCheckbox x:Name="blackNotesAbove" Text="{DynamicResource blackNotesAbove}" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" CheckToggled="BlackNotesAbove_Checked" IsChecked="True"/>
             <DockPanel HorizontalAlignment="Left" LastChildFill="False" Margin="0,10,0,0" VerticalAlignment="Top">
                 <Label x:Name="topCol" Content="{DynamicResource topColor}" HorizontalAlignment="Left" VerticalAlignment="Top" DockPanel.Dock="Left"/>
                 <TextBlock HorizontalAlignment="Left" Margin="0,6,2,0" TextWrapping="Wrap" Text="#" VerticalAlignment="Top" FontSize="14"/>

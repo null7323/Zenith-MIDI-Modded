@@ -37,15 +37,8 @@
     <system:String x:Key="previewHeightLabel">Preview Height</system:String>
     <!--Skip-->
     <system:String x:Key="skipLabel">Skipping Ticks</system:String>
-    <!--Note Buffer Size-->
-    <system:String x:Key="noteBufferSize">Note Buffer Size</system:String>
-    <system:String x:Key="sizeExtremelyLarge">Extremely Large</system:String>
-    <system:String x:Key="sizeVeryLarge">Very Large</system:String>
-    <system:String x:Key="sizeLarge">Large</system:String>
-    <system:String x:Key="sizeStandard">Standard</system:String>
-    <system:String x:Key="sizeSmall">Small</system:String>
-    <system:String x:Key="sizeVerySmall">Very Small</system:String>
-    <system:String x:Key="sizeExtremelySmall">Extremely Small</system:String>
+    <!-- use multithread to load midi-->
+    <system:String x:Key="useMultithreadToLoad">Use Multithread to Load Midi</system:String>
 
     <!--Plugins Page-->
     <system:String x:Key="reload">Reload</system:String>
@@ -69,6 +62,27 @@
     <system:String x:Key="startRender">Start Render</system:String>
     <system:String x:Key="ifUploading">If uploading the video online, please credit the program</system:String>
     <system:String x:Key="Custom">Customize FFmpeg Options (for experts, at your own risk)</system:String>
+    <!-- Sub Menu -->
+    <system:String x:Key="BasicSettingsTab">Basic Settings</system:String>
+    <system:String x:Key="OtherSettingsTab">Other Settings</system:String>
+    <system:String x:Key="renderInfo">Render Info</system:String>
+    <!-- render info -->
+    <system:String x:Key="zenithRenderInfo">Render Information</system:String>
+    <system:String x:Key="renderProgress">Progress</system:String>
+    <system:String x:Key="renderFPS">Render FPS</system:String>
+    <system:String x:Key="renderSpeed">Render Speed</system:String>
+    <system:String x:Key="renderedFrame">Rendered Frames</system:String>
+    <system:String x:Key="notesDrawn">Notes Drawn</system:String>
+    <system:String x:Key="avgMemory">Average Memory (MB)</system:String>
+    <system:String x:Key="peakMemory">Peak Memory (MB)</system:String>
+    <system:String x:Key="currMemory">Current Memory (MB)</system:String>
+    <system:String x:Key="timeToRender">Time to render</system:String>
+    <system:String x:Key="avgSpeed">Average Speed</system:String>
+    <system:String x:Key="renderStatus">Status</system:String>
+    <system:String x:Key="isRendering">Rendering</system:String>
+    <system:String x:Key="finishedRender">Finished Render</system:String>
+    <system:String x:Key="collectingUnusedMemory">Collecting Unused Memory</system:String>
+    <!--end-->
     <!--More...-->
     <system:String x:Key="filterThreadsUsing">Filter Threads</system:String>
     <system:String x:Key="encoders">Encoder For Rendering</system:String>
@@ -76,6 +90,12 @@
     <system:String x:Key="maxMemory">Max Render Memory (MBytes)</system:String>
     <system:String x:Key="autoDisableKDMAPI">Disable KDMAPI when rendering</system:String>
     <system:String x:Key="enableMemorySaving">Memory Saving (Slower!)</system:String>
+    <system:String x:Key="fullFFArg">Full FFMPEG Arguments</system:String>
+    <system:String x:Key="collectMemoryIf">Collect Unused Memory when Notes drawn is more than </system:String>
+    <system:String x:Key="manualCollect">Collect Unused Memory</system:String>
+    <system:String x:Key="adjustAutomatically">Adjust Memory Collection Automatically</system:String>
+    <system:String x:Key="doNotWrite">Do not Write Anything to Console while rendering</system:String>
+    <system:String x:Key="clearTheConsole">Clear the Console</system:String>
     <!--End-->
     
     <!--NEW 1.5-->
@@ -87,6 +107,8 @@
     <system:String x:Key="timeBased">Time Based</system:String>
     <system:String x:Key="ignoreColorEvents">Ignore Color Events</system:String>
     <system:String x:Key="useBackgroundImage">Use Background</system:String>
+    <!--New in mod-->
+    <system:String x:Key="reloadKDMAPI">Reload KDMAPI</system:String>
 
     <!--NEW 1.6-->
     <system:String x:Key="pauseHintNew">Press space to toggle pause, press enter on the preview window to fullscreen</system:String>
@@ -95,4 +117,11 @@
     <system:String x:Key="palettes_reload">Reload</system:String>
     <system:String x:Key="palettes_randomise">Randomise color order</system:String>
     <system:String x:Key="palettes_openFolder">Open Palettes Folder</system:String>
+    
+    <!--Config Page-->
+    <system:String x:Key="configList">Configuration List</system:String>
+    <system:String x:Key="configID">Config</system:String>
+    <system:String x:Key="saveConfig">Save</system:String>
+    <system:String x:Key="loadConfig">Load</system:String>
+    <system:String x:Key="setToDefault">Default</system:String>
 </ResourceDictionary>

@@ -404,8 +404,6 @@ void main()
             circleUV = GL.GenBuffer();
             circleIndx = GL.GenBuffer();
 
-            noteBuffLen = (int)(524288 * renderSettings.noteBufferSizeRadio);
-
             noteVertBuff = new double[noteBuffLen * 12];
             noteColBuff = new float[noteBuffLen * 16];
             noteShadeBuff = new float[noteBuffLen * 4];
@@ -1978,14 +1976,15 @@ void main()
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void ReloadTrackColors()
         {
             if (NoteColors == null) return;
             var cols = ((SettingsCtrl)SettingsControl).paletteList.GetColors(NoteColors.Length);
 
-            /*for (int i = 0; i < NoteColors.Length; i++)
+            for (int i = 0, NoteColorsLength = NoteColors.Length; i < NoteColorsLength; ++i)
             {
-                for (int j = 0; j < NoteColors[i].Length; j++)
+                for (int j = 0, EachNoteColorsLength = NoteColors[i].Length; j < EachNoteColorsLength; ++j)
                 {
                     if (NoteColors[i][j].isDefault)
                     {
@@ -1993,8 +1992,8 @@ void main()
                         NoteColors[i][j].right = cols[i * 32 + j * 2 + 1];
                     }
                 }
-            }*/
-            int IndexOfI = 0;
+            }
+            /*int IndexOfI = 0;
             int IndexOfJ;
             foreach (var i in NoteColors)
             {
@@ -2009,9 +2008,10 @@ void main()
                     ++IndexOfJ;
                 }
                 ++IndexOfI;
-            }
+            }*/
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         void FlushNoteBuffer(bool check = true)
         {
             if (noteBuffPos < noteBuffLen && check) return;

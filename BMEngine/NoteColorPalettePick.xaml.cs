@@ -166,6 +166,16 @@ namespace ZenithEngine
             catch { }
         }
 
+        void SetQQSColor()
+        {
+            Bitmap img = new Bitmap(16, 1);
+            Random ColorGen = new Random();
+            for (int i = 0; i < 16; i++)
+            {
+                
+            }
+        }
+
         public void SelectImage(string img)
         {
             bool set = false;

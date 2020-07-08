@@ -42,8 +42,6 @@ namespace ZenithEngine
 
         RenderSettings settings;
 
-        bool loadedMidi = false;
-
         public MidiFile(string filename, RenderSettings settings)
         {
             this.settings = settings;
@@ -57,9 +55,12 @@ namespace ZenithEngine
 
             Console.WriteLine("Loading tracks into memory");
             info = new MidiInfo();
-            Task.Factory.StartNew(() => LoadAndParseAll(true), TaskCreationOptions.LongRunning);
+            Task LoadMidi = new Task(() => LoadAndParseAll(true), TaskCreationOptions.LongRunning | TaskCreationOptions.RunContinuationsAsynchronously);
+            LoadMidi.Start();
             // LoadAndParseAll(true);
-            SpinWait.SpinUntil(() => loadedMidi == true);
+            LoadMidi.GetAwaiter().GetResult();
+            // SpinWait.SpinUntil(() => loadedMidi == true);
+
             Console.WriteLine("Loaded!");
             Console.WriteLine("Note count: " + noteCount);
             unendedTracks = trackcount;
@@ -69,9 +70,10 @@ namespace ZenithEngine
             info.noteCount = noteCount;
             info.tickLength = maxTrackTime;
             info.trackCount = trackcount;
-            tempoTickMultiplier = (double)division / 500;
+            tempoTickMultiplier = (double)division / 500000 * 1000;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         void AssertText(string text)
         {
             foreach (char c in text)
@@ -83,6 +85,7 @@ namespace ZenithEngine
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         uint ReadInt32()
         {
             uint length = 0;
@@ -94,6 +97,7 @@ namespace ZenithEngine
             return length;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         ushort ReadInt16()
         {
             ushort length = 0;
@@ -103,6 +107,7 @@ namespace ZenithEngine
             return length;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         void ParseHeaderChunk()
         {
             AssertText("MThd");
@@ -115,6 +120,7 @@ namespace ZenithEngine
             if (division < 0) throw new Exception("Division < 0 not supported");
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         void ParseTrackChunk()
         {
             AssertText("MTrk");
@@ -126,7 +132,7 @@ namespace ZenithEngine
             Console.WriteLine("Track " + trackcount + ", Size " + length);
         }
 
-
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public bool ParseUpTo(double targetTime)
         {
             lock (globalDisplayNotes)
@@ -136,13 +142,21 @@ namespace ZenithEngine
                     {
                         currentFlexSyncTime += 1 / tempoTickMultiplier;
                         int ut = 0;
-                        for (int trk = 0; trk < trackcount; ++trk)
+                        /*for (int trk = 0; trk < trackcount; ++trk)
                         {
                             var t = tracks[trk];
                             if (!t.trackEnded)
                             {
                                 ut++;
                                 t.Step(currentSyncTime);
+                            }
+                        }*/
+                        foreach (var trk in tracks)
+                        {
+                            if (!trk.trackEnded)
+                            {
+                                ut++;
+                                trk.Step(currentSyncTime);
                             }
                         }
                         unendedTracks = ut;
@@ -151,13 +165,21 @@ namespace ZenithEngine
                     for (; currentSyncTime <= targetTime && settings.running; ++currentSyncTime)
                     {
                         int ut = 0;
-                        for (int trk = 0; trk < trackcount; ++trk)
+                        /*for (int trk = 0; trk < trackcount; ++trk)
                         {
                             var t = tracks[trk];
                             if (!t.trackEnded)
                             {
                                 ++ut;
                                 t.Step(currentSyncTime);
+                            }
+                        }*/
+                        foreach (var trk in tracks)
+                        {
+                            if (!trk.trackEnded)
+                            {
+                                ut++;
+                                trk.Step(currentSyncTime);
                             }
                         }
                         unendedTracks = ut;
@@ -175,48 +197,84 @@ namespace ZenithEngine
             long[] tracklens = new long[tracks.Length];
             int p = 0;
             List<FastList<Tempo>> tempos = new List<FastList<Tempo>>();
-            Parallel.For(0, tracks.Length, (i) =>
-               {
-                   var reader = new BufferByteReader(MidiFileReader, settings.maxTrackBufferSize, trackBeginnings[i], trackLengths[i]);
-                   tracks[i] = new MidiTrack(i, reader, this, settings);
-                   var t = tracks[i];
-                   while (!t.trackEnded)
-                   {
-                       try
-                       {
-                           t.ParseNextEventFast();
-                       }
-                       catch
-                       {
-                           break;
-                       }
-                   }
-                   noteCount += t.noteCount;
-                   tracklens[i] = t.trackTime;
-                   if (t.foundTimeSig != null)
-                       info.timeSig = t.foundTimeSig;
-                   if (t.zerothTempo != -1)
-                   {
-                       zerothTempo = t.zerothTempo;
-                   }
-                   lock (tempos) tempos.Add(t.TempoEvents);
-                   t.Reset();
-                   Console.WriteLine("Loaded track " + ++p + "/" + tracks.Length);
-                   GC.Collect();
-               });
+            if (!settings.useMultithreadToLoadMidi)
+            {
+                // Parallel.For(0, tracks.Length, (i) =>
+                for (int i = 0, trkLength = tracks.Length; i < trkLength; ++i)
+                {
+                    var reader = new BufferByteReader(MidiFileReader, settings.maxTrackBufferSize, trackBeginnings[i], trackLengths[i]);
+                    tracks[i] = new MidiTrack(i, reader, this, settings);
+                    var t = tracks[i];
+                    while (!t.trackEnded)
+                    {
+                        try
+                        {
+                            t.ParseNextEventFast();
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
+                    noteCount += t.noteCount;
+                    tracklens[i] = t.trackTime;
+                    if (t.foundTimeSig != null)
+                        info.timeSig = t.foundTimeSig;
+                    if (t.zerothTempo != -1)
+                    {
+                        zerothTempo = t.zerothTempo;
+                    }
+                    lock (tempos) tempos.Add(t.TempoEvents);
+                    t.Reset();
+                    Console.WriteLine("Loaded track " + ++p + "/" + tracks.Length);
+                    GC.Collect();
+                }// );
+            }
+            else
+            {
+                Parallel.For(0, tracks.Length, (i) =>
+                {
+                    var reader = new BufferByteReader(MidiFileReader, settings.maxTrackBufferSize, trackBeginnings[i], trackLengths[i]);
+                    tracks[i] = new MidiTrack(i, reader, this, settings);
+                    var t = tracks[i];
+                    while (!t.trackEnded)
+                    {
+                        try
+                        {
+                            t.ParseNextEventFast();
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
+                    noteCount += t.noteCount;
+                    tracklens[i] = t.trackTime;
+                    if (t.foundTimeSig != null)
+                        info.timeSig = t.foundTimeSig;
+                    if (t.zerothTempo != -1)
+                    {
+                        zerothTempo = t.zerothTempo;
+                    }
+                    lock (tempos) tempos.Add(t.TempoEvents);
+                    t.Reset();
+                    Console.WriteLine("Loaded track " + ++p + "/" + tracks.Length);
+                    GC.Collect();
+                });
+            }
             maxTrackTime = tracklens.Max();
             Console.WriteLine("Processing Tempos");
-            LinkedList<Tempo> Tempos = new LinkedList<Tempo>();
+            FastList<Tempo> Tempos = new FastList<Tempo>();
             var iters = tempos.Select(t => t.GetEnumerator()).ToArray();
             bool[] unended = new bool[iters.Length];
-            for (int i = 0; i < iters.Length; ++i) unended[i] = iters[i].MoveNext();
+            for (int i = 0, itersLength = iters.Length; i < itersLength; ++i) unended[i] = iters[i].MoveNext();
             while (true)
             {
                 long smallest = 0;
                 bool first = true;
                 int id = 0;
                 // for (int i = 0; i < iters.Length; ++i)
-                for (int i = 0; i < iters.Length; ++i)
+                for (int i = 0, itersLength = iters.Length; i < itersLength; ++i)
                 {
                     if (!unended[i]) continue;
                     if (first)
@@ -236,7 +294,7 @@ namespace ZenithEngine
                 {
                     break;
                 }
-                Tempos.AddLast(iters[id].Current);
+                Tempos.Add(iters[id].Current);
                 unended[id] = iters[id].MoveNext();
             }
 
@@ -259,15 +317,15 @@ namespace ZenithEngine
 
             maxTrackTime = tracklens.Max();
             unendedTracks = trackcount;
-            // midi loaded
-            loadedMidi = true;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void SetZeroColors()
         {
             foreach (var t in tracks) t.SetZeroColors();
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
             globalDisplayNotes.Unlink();
@@ -285,7 +343,6 @@ namespace ZenithEngine
         {
             foreach (var t in tracks) t.Dispose();
             MidiFileReader.Dispose();
-            loadedMidi = false;
         }
     }
 }

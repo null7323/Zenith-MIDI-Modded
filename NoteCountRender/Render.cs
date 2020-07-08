@@ -11,6 +11,8 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System.Windows.Controls;
+using System.Drawing.Drawing2D;
+using System.Windows.Documents;
 
 namespace NoteCountRender
 {
@@ -74,7 +76,7 @@ namespace NoteCountRender
 
         int fontSize = 40;
         string font = "Arial";
-        public System.Drawing.FontStyle fontStyle = System.Drawing.FontStyle.Regular;
+        public FontStyle fontStyle = FontStyle.Regular;
 
         StreamWriter outputCsv = null;
 
@@ -93,13 +95,17 @@ namespace NoteCountRender
             Mnps = 0;
             frames = 0;
             Mplph = 0;
-            notesHit = new LinkedList<long>();
+            notesHit = new FastList<long>();
             Initialized = true;
 
             if (settings.saveCsv && settings.csvOutput != "")
             {
                 outputCsv = new StreamWriter(settings.csvOutput);
             }
+            fzp = new string('0', renderSettings.fps.ToString().Length);
+
+            scaleWidth = 1.0f / renderSettings.width;
+            scaleHeight = -1.0f / renderSettings.height;
 
             Console.WriteLine("Initialised NoteCountRender");
         }
@@ -120,7 +126,98 @@ namespace NoteCountRender
         long polyphony = 0;
         long Mplph = 0;
         
-        LinkedList<long> notesHit = new LinkedList<long>();
+        FastList<long> notesHit = new FastList<long>();
+
+        #region Fields
+        double tempo;
+        int seconds;
+        int totalsec;
+        int totalframes;
+
+        TimeSpan time;
+        TimeSpan totaltime;
+
+        double barDivide;
+        long limMidiTime;
+
+        long bar;
+        long maxbar;
+
+        string fzp;
+        string renderText;
+
+        float scaleWidth;
+        float scaleHeight;
+
+        Color4 White = Color4.White;
+        #endregion
+
+        // Func<string, Commas, string> replace = (text, separator) =>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        string replace(string text, Commas separator)
+        {
+            Zeroes zeroes = new Zeroes();
+            string sep = "";
+            if (separator == Commas.Comma) sep = "#,";
+            if (settings.PaddingZeroes)
+            {
+                zeroes.bpm = new string('0', settings.BPMintPad) + "." + new string('0', settings.BPMDecPtPad);
+                zeroes.nc = new string('0', settings.NoteCountPad);
+                zeroes.plph = new string('0', settings.PolyphonyPad);
+                zeroes.nps = new string('0', settings.NPSPad);
+                zeroes.tick = new string('0', settings.TicksPad);
+                zeroes.bars = new string('0', settings.BarCountPad);
+                zeroes.frms = new string('0', settings.FrCountPad);
+            }
+
+            text = text.Replace("{bpm}", tempo.ToString(zeroes.bpm));
+
+            text = text.Replace("{nc}", noteCount.ToString(sep + zeroes.nc));
+            text = text.Replace("{nr}", (CurrentMidi.noteCount - noteCount).ToString(sep + zeroes.nc));
+            text = text.Replace("{tn}", CurrentMidi.noteCount.ToString(sep + zeroes.nc));
+
+            text = text.Replace("{nps}", nps.ToString(sep + zeroes.nps));
+            text = text.Replace("{mnps}", Mnps.ToString(sep + zeroes.nps));
+            text = text.Replace("{plph}", polyphony.ToString(sep + zeroes.plph));
+            text = text.Replace("{mplph}", Mplph.ToString(sep + zeroes.plph));
+
+            text = text.Replace("{currsec}", ((double)(seconds / 100) / 10).ToString(sep + "0.0"));
+            text = text.Replace("{currtime}", time.ToString("mm\\:ss"));
+            text = text.Replace("{cmiltime}", time.ToString("mm\\:ss\\.fff"));
+            text = text.Replace("{cfrtime}", time.ToString("mm\\:ss") + ";" + (frames % renderSettings.fps).ToString(fzp));
+
+            text = text.Replace("{totalsec}", ((double)(totalsec / 100) / 10).ToString(sep + "0.0"));
+            text = text.Replace("{totaltime}", totaltime.ToString("mm\\:ss"));
+            text = text.Replace("{tmiltime}", totaltime.ToString("mm\\:ss\\.fff"));
+            text = text.Replace("{tfrtime}", totaltime.ToString("mm\\:ss") + ";" + (totalframes % renderSettings.fps).ToString(fzp));
+
+            text = text.Replace("{remsec}", ((double)((totalsec - seconds) / 100) / 10).ToString(sep + "0.0"));
+            text = text.Replace("{remtime}", (totaltime - time).ToString("mm\\:ss"));
+            text = text.Replace("{rmiltime}", (totaltime - time).ToString("mm\\:ss\\.fff"));
+            text = text.Replace("{rfrtime}", (totaltime - time).ToString("mm\\:ss") + ";" + ((totalframes - frames + renderSettings.fps) % renderSettings.fps).ToString(fzp));
+
+            text = text.Replace("{currticks}", (limMidiTime).ToString(sep + zeroes.tick));
+            text = text.Replace("{totalticks}", (CurrentMidi.tickLength).ToString(sep + zeroes.tick));
+            text = text.Replace("{remticks}", (CurrentMidi.tickLength - limMidiTime).ToString(sep + zeroes.tick));
+
+            text = text.Replace("{currbars}", bar.ToString(sep + zeroes.bars));
+            text = text.Replace("{totalbars}", maxbar.ToString(sep + zeroes.bars));
+            text = text.Replace("{rembars}", (maxbar - bar).ToString(sep + zeroes.bars));
+
+            text = text.Replace("{ppq}", CurrentMidi.division.ToString());
+            text = text.Replace("{tsn}", CurrentMidi.timeSig.numerator.ToString());
+            text = text.Replace("{tsd}", CurrentMidi.timeSig.denominator.ToString());
+            text = text.Replace("{avgnps}", ((double)CurrentMidi.noteCount / (double)CurrentMidi.secondsLength).ToString(sep + "0.00"));
+
+            text = text.Replace("{currframes}", frames.ToString(sep + zeroes.frms));
+            text = text.Replace("{totalframes}", totalframes.ToString(sep + zeroes.frms));
+            text = text.Replace("{remframes}", (totalframes - frames).ToString(sep + zeroes.frms));
+
+            text = text.Replace("{notep}", (((decimal)noteCount * 1000000 / (decimal)CurrentMidi.noteCount) / 10000).ToString("00.0000"));
+            text = text.Replace("{tickp}", (((decimal)limMidiTime * 1000000 / (decimal)CurrentMidi.tickLength) / 10000).ToString("00.0000"));
+            text = text.Replace("{timep}", (((decimal)seconds * 1000000 / (decimal)totalsec) / 10000).ToString("00.0000"));
+            return text;
+        }
 
         public void RenderFrame(FastList<Note> notes, double midiTime, int finalCompositeBuff)
         {
@@ -174,124 +271,145 @@ namespace NoteCountRender
                                 n.meta = true;
                             }
                         }
-                        if (n.start > midiTime) break;
+                        else if (n.start > midiTime) break;
                     }
                 LastNoteCount = nc;
-                notesHit.AddLast(currentNotes);
-                while (notesHit.Count > renderSettings.fps) notesHit.RemoveFirst();
+                // notesHit.AddLast(currentNotes);
+                notesHit.Add(currentNotes);
+                while (notesHit.Count() > renderSettings.fps) notesHit.Pop();
                 nps = notesHit.Sum();
                 if (Mnps < nps) Mnps = nps;
                 if (Mplph < polyphony) Mplph = polyphony;
                 frames++;
             }
 
-            double tempo = Tempo;
+            tempo = Tempo;
             
-            int seconds = (int)Math.Floor((double)frames * 1000 / renderSettings.fps);
-            int totalsec = (int)Math.Floor(CurrentMidi.secondsLength * 1000);
-            int totalframes = (int)Math.Ceiling(CurrentMidi.secondsLength * renderSettings.fps);
+            seconds = (int)Math.Floor((double)frames * 1000 / renderSettings.fps);
+            totalsec = (int)Math.Floor(CurrentMidi.secondsLength * 1000);
+            totalframes = (int)Math.Ceiling(CurrentMidi.secondsLength * renderSettings.fps);
             if (seconds > totalsec) seconds = totalsec;
-            TimeSpan time = new TimeSpan(0, 0, 0, 0, seconds);
-            TimeSpan totaltime = new TimeSpan(0, 0, 0, 0, totalsec);
+            time = new TimeSpan(0, 0, 0, 0, seconds);
+            totaltime = new TimeSpan(0, 0, 0, 0, totalsec);
             if (frames > totalframes) frames = totalframes;
 
-            double barDivide = (double)CurrentMidi.division * CurrentMidi.timeSig.numerator / CurrentMidi.timeSig.denominator * 4;
+            barDivide = (double)CurrentMidi.division * CurrentMidi.timeSig.numerator / CurrentMidi.timeSig.denominator * 4;
 
-            long limMidiTime = (long)midiTime;
+            limMidiTime = (long)midiTime;
             if (limMidiTime > CurrentMidi.tickLength) limMidiTime = CurrentMidi.tickLength;
 
-            long bar = (long)Math.Floor(limMidiTime / barDivide) + 1;
-            long maxbar = (long)Math.Floor(CurrentMidi.tickLength / barDivide);
+            bar = (long)Math.Floor(limMidiTime / barDivide) + 1;
+            maxbar = (long)Math.Floor(CurrentMidi.tickLength / barDivide);
             if (bar > maxbar) bar = maxbar;
-            string fzp = new string('0', renderSettings.fps.ToString().Length);
             
-            Func<string, Commas, string> replace = (text, separator) =>
-            {
-                Zeroes zeroes = new Zeroes();
-                string sep = "";
-                if (separator == Commas.Comma) sep = "#,";
-                if (settings.PaddingZeroes)
-                {
-                    zeroes.bpm = new string('0', settings.BPMintPad) +"." + new string('0', settings.BPMDecPtPad);
-                    zeroes.nc = new string('0', settings.NoteCountPad);
-                    zeroes.plph = new string('0', settings.PolyphonyPad);
-                    zeroes.nps = new string('0', settings.NPSPad);
-                    zeroes.tick = new string('0', settings.TicksPad);
-                    zeroes.bars = new string('0', settings.BarCountPad);
-                    zeroes.frms = new string('0', settings.FrCountPad);
-                }
-
-                text = text.Replace("{bpm}", tempo.ToString(zeroes.bpm));
-
-                text = text.Replace("{nc}", noteCount.ToString(sep + zeroes.nc));
-                text = text.Replace("{nr}", (CurrentMidi.noteCount - noteCount).ToString(sep + zeroes.nc));
-                text = text.Replace("{tn}", CurrentMidi.noteCount.ToString(sep + zeroes.nc));
-
-                text = text.Replace("{nps}", nps.ToString(sep + zeroes.nps));
-                text = text.Replace("{mnps}", Mnps.ToString(sep + zeroes.nps));
-                text = text.Replace("{plph}", polyphony.ToString(sep + zeroes.plph));
-                text = text.Replace("{mplph}", Mplph.ToString(sep + zeroes.plph));
-
-                text = text.Replace("{currsec}", ((double)(seconds / 100) / 10).ToString(sep + "0.0"));
-                text = text.Replace("{currtime}", time.ToString("mm\\:ss"));
-                text = text.Replace("{cmiltime}", time.ToString("mm\\:ss\\.fff"));
-                text = text.Replace("{cfrtime}", time.ToString("mm\\:ss") + ";" + (frames % renderSettings.fps).ToString(fzp));
-
-                text = text.Replace("{totalsec}", ((double)(totalsec / 100) / 10).ToString(sep + "0.0"));
-                text = text.Replace("{totaltime}", totaltime.ToString("mm\\:ss"));
-                text = text.Replace("{tmiltime}", totaltime.ToString("mm\\:ss\\.fff"));
-                text = text.Replace("{tfrtime}", totaltime.ToString("mm\\:ss") + ";" + (totalframes % renderSettings.fps).ToString(fzp));
-
-                text = text.Replace("{remsec}", ((double)((totalsec - seconds) / 100) / 10).ToString(sep + "0.0"));
-                text = text.Replace("{remtime}", (totaltime - time).ToString("mm\\:ss"));
-                text = text.Replace("{rmiltime}", (totaltime - time).ToString("mm\\:ss\\.fff"));
-                text = text.Replace("{rfrtime}", (totaltime - time).ToString("mm\\:ss") + ";" + ((totalframes - frames + renderSettings.fps) % renderSettings.fps).ToString(fzp));
-
-                text = text.Replace("{currticks}", (limMidiTime).ToString(sep + zeroes.tick));
-                text = text.Replace("{totalticks}", (CurrentMidi.tickLength).ToString(sep + zeroes.tick));
-                text = text.Replace("{remticks}", (CurrentMidi.tickLength - limMidiTime).ToString(sep + zeroes.tick));
-
-                text = text.Replace("{currbars}", bar.ToString(sep + zeroes.bars));
-                text = text.Replace("{totalbars}", maxbar.ToString(sep + zeroes.bars));
-                text = text.Replace("{rembars}", (maxbar - bar).ToString(sep + zeroes.bars));
-
-                text = text.Replace("{ppq}", CurrentMidi.division.ToString());
-                text = text.Replace("{tsn}", CurrentMidi.timeSig.numerator.ToString());
-                text = text.Replace("{tsd}", CurrentMidi.timeSig.denominator.ToString());
-                text = text.Replace("{avgnps}", ((double)CurrentMidi.noteCount / (double)CurrentMidi.secondsLength).ToString(sep + "0.00"));
-
-                text = text.Replace("{currframes}", frames.ToString(sep + zeroes.frms));
-                text = text.Replace("{totalframes}", totalframes.ToString(sep + zeroes.frms));
-                text = text.Replace("{remframes}", (totalframes - frames).ToString(sep + zeroes.frms));
-
-                text = text.Replace("{notep}", (((decimal)noteCount * 1000000 / (decimal)CurrentMidi.noteCount) / 10000).ToString("00.0000"));
-                text = text.Replace("{tickp}", (((decimal)limMidiTime * 1000000 / (decimal)CurrentMidi.tickLength) / 10000).ToString("00.0000"));
-                text = text.Replace("{timep}", (((decimal)seconds * 1000000 / (decimal)totalsec) / 10000).ToString("00.0000"));
-                return text;
-            };
-
-
-            string renderText = settings.text;
+            renderText = settings.text;
             renderText = replace(renderText, settings.thousandSeparator);
 
-            if (settings.textAlignment == Alignments.TopLeft)
+            float offset = 0;
+            Matrix4 transform = Matrix4.Identity;
+            string[] lines = renderText.Split('\n');
+
+            switch (settings.textAlignment)
+            {
+                case Alignments.TopLeft:
+                    transform = Matrix4.Mult(transform, Matrix4.CreateScale(scaleWidth, scaleHeight, 1.0f));
+                    transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-1, 1, 0));
+                    transform = Matrix4.Mult(transform, Matrix4.CreateRotationZ(0));
+
+                    textEngine.Render(renderText, transform, White);
+                    break;
+                case Alignments.TopRight:
+                    foreach (var line in lines)
+                    {
+                        var size = textEngine.GetBoundBox(line);
+                        // Matrix4 transform = Matrix4.Identity;
+                        transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width, offset, 0));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateScale(scaleWidth, scaleHeight, 1.0f));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(1, 1, 0));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateRotationZ(0));
+                        offset += size.Height;
+                        textEngine.Render(line, transform, White);
+                    }
+                    break;
+                case Alignments.BottomLeft:
+                    foreach (var line in lines.Reverse())
+                    {
+                        var size = textEngine.GetBoundBox(line);
+                        // Matrix4 transform = Matrix4.Identity;
+                        transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(0, offset - size.Height, 0));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateScale(scaleWidth, scaleHeight, 1.0f));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-1, -1, 0));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateRotationZ(0));
+                        offset -= size.Height;
+                        textEngine.Render(line, transform, White);
+                    }
+                    break;
+                case Alignments.BottomRight:
+                    foreach (var line in lines.Reverse())
+                    {
+                        var size = textEngine.GetBoundBox(line);
+                        // Matrix4 transform = Matrix4.Identity;
+                        transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width, offset - size.Height, 0));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateScale(scaleWidth, scaleHeight, 1.0f));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(1, -1, 0));
+                        transform = Matrix4.Mult(transform, Matrix4.CreateRotationZ(0));
+                        offset -= size.Height;
+                        textEngine.Render(line, transform, White);
+                    }
+                    break;
+                default:
+                    int p = 1;
+                    float dist = 1.0f / (lines.Length + 1);
+                    switch (settings.textAlignment)
+                    {
+                        case Alignments.TopSpread:
+                            foreach (var line in lines.Reverse())
+                            {
+                                var size = textEngine.GetBoundBox(line);
+                                // Matrix4 transform = Matrix4.Identity;
+                                transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width / 2, 0, 0));
+                                transform = Matrix4.Mult(transform, Matrix4.CreateScale(scaleWidth, scaleHeight, 1.0f));
+                                transform = Matrix4.Mult(transform, Matrix4.CreateTranslation((dist * p++) * 2 - 1, 1, 0));
+                                transform = Matrix4.Mult(transform, Matrix4.CreateRotationZ(0));
+                                offset -= size.Height;
+                                textEngine.Render(line, transform, White);
+                            }
+                            break;
+                        case Alignments.BottomSpread:
+                            foreach (var line in lines.Reverse())
+                            {
+                                var size = textEngine.GetBoundBox(line);
+                                // Matrix4 transform = Matrix4.Identity;
+                                transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width / 2, -size.Height, 0));
+                                transform = Matrix4.Mult(transform, Matrix4.CreateScale(scaleWidth, scaleHeight, 1.0f));
+                                transform = Matrix4.Mult(transform, Matrix4.CreateTranslation((dist * p++) * 2 - 1, -1, 0));
+                                transform = Matrix4.Mult(transform, Matrix4.CreateRotationZ(0));
+                                offset -= size.Height;
+                                textEngine.Render(line, transform, White);
+                            }
+                            break;
+                    }
+                    break;
+            }
+
+            /*if (settings.textAlignment == Alignments.TopLeft)
             {
                 // var size = textEngine.GetBoundBox(renderText);
-                Matrix4 transform = Matrix4.Identity;
+                // Matrix4 transform = Matrix4.Identity;
                 transform = Matrix4.Mult(transform, Matrix4.CreateScale(1.0f / renderSettings.width, -1.0f / renderSettings.height, 1.0f));
                 transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-1, 1, 0));
                 transform = Matrix4.Mult(transform, Matrix4.CreateRotationZ(0));
 
                 textEngine.Render(renderText, transform, Color4.White);
-            }
-            else if (settings.textAlignment == Alignments.TopRight)
+            }*/
+            /*else if (settings.textAlignment == Alignments.TopRight)
             {
-                float offset = 0;
-                string[] lines = renderText.Split('\n');
+                // float offset = 0;
+                // string[] lines = renderText.Split('\n');
                 foreach (var line in lines)
                 {
                     var size = textEngine.GetBoundBox(line);
-                    Matrix4 transform = Matrix4.Identity;
+                    // Matrix4 transform = Matrix4.Identity;
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width, offset, 0));
                     transform = Matrix4.Mult(transform, Matrix4.CreateScale(1.0f / renderSettings.width, -1.0f / renderSettings.height, 1.0f));
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(1, 1, 0));
@@ -299,15 +417,15 @@ namespace NoteCountRender
                     offset += size.Height;
                     textEngine.Render(line, transform, Color4.White);
                 }
-            }
-            else if (settings.textAlignment == Alignments.BottomLeft)
+            }*/
+            /*else if (settings.textAlignment == Alignments.BottomLeft)
             {
-                float offset = 0;
+                // float offset = 0;
                 string[] lines = renderText.Split('\n');
                 foreach (var line in lines.Reverse())
                 {
                     var size = textEngine.GetBoundBox(line);
-                    Matrix4 transform = Matrix4.Identity;
+                    // Matrix4 transform = Matrix4.Identity;
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(0, offset - size.Height, 0));
                     transform = Matrix4.Mult(transform, Matrix4.CreateScale(1.0f / renderSettings.width, -1.0f / renderSettings.height, 1.0f));
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-1, -1, 0));
@@ -315,15 +433,15 @@ namespace NoteCountRender
                     offset -= size.Height;
                     textEngine.Render(line, transform, Color4.White);
                 }
-            }
-            else if (settings.textAlignment == Alignments.BottomRight)
+            }*/
+            /*else if (settings.textAlignment == Alignments.BottomRight)
             {
-                float offset = 0;
+                // float offset = 0;
                 string[] lines = renderText.Split('\n');
                 foreach (var line in lines.Reverse())
                 {
                     var size = textEngine.GetBoundBox(line);
-                    Matrix4 transform = Matrix4.Identity;
+                    // Matrix4 transform = Matrix4.Identity;
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width, offset - size.Height, 0));
                     transform = Matrix4.Mult(transform, Matrix4.CreateScale(1.0f / renderSettings.width, -1.0f / renderSettings.height, 1.0f));
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(1, -1, 0));
@@ -331,17 +449,17 @@ namespace NoteCountRender
                     offset -= size.Height;
                     textEngine.Render(line, transform, Color4.White);
                 }
-            }
-            else if (settings.textAlignment == Alignments.TopSpread)
+            }*/
+            /*else if (settings.textAlignment == Alignments.TopSpread)
             {
-                float offset = 0;
+                // float offset = 0;
                 string[] lines = renderText.Split('\n');
                 float dist = 1.0f / (lines.Length + 1);
                 int p = 1;
                 foreach (var line in lines.Reverse())
                 {
                     var size = textEngine.GetBoundBox(line);
-                    Matrix4 transform = Matrix4.Identity;
+                    // Matrix4 transform = Matrix4.Identity;
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width / 2, 0, 0));
                     transform = Matrix4.Mult(transform, Matrix4.CreateScale(1.0f / renderSettings.width, -1.0f / renderSettings.height, 1.0f));
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation((dist * p++) * 2 - 1, 1, 0));
@@ -349,17 +467,17 @@ namespace NoteCountRender
                     offset -= size.Height;
                     textEngine.Render(line, transform, Color4.White);
                 }
-            }
-            else if (settings.textAlignment == Alignments.BottomSpread)
+            }*/
+            /*else if (settings.textAlignment == Alignments.BottomSpread)
             {
-                float offset = 0;
+                // float offset = 0;
                 string[] lines = renderText.Split('\n');
                 float dist = 1.0f / (lines.Length + 1);
                 int p = 1;
                 foreach (var line in lines.Reverse())
                 {
                     var size = textEngine.GetBoundBox(line);
-                    Matrix4 transform = Matrix4.Identity;
+                    // Matrix4 transform = Matrix4.Identity;
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation(-size.Width / 2, -size.Height, 0));
                     transform = Matrix4.Mult(transform, Matrix4.CreateScale(1.0f / renderSettings.width, -1.0f / renderSettings.height, 1.0f));
                     transform = Matrix4.Mult(transform, Matrix4.CreateTranslation((dist * p++) * 2 - 1, -1, 0));
@@ -367,9 +485,9 @@ namespace NoteCountRender
                     offset -= size.Height;
                     textEngine.Render(line, transform, Color4.White);
                 }
-            }
+            }*/
 
-            if(outputCsv != null)
+            if (outputCsv != null)
             {
                 outputCsv.WriteLine(replace(settings.csvFormat, Commas.Nothing));
             }

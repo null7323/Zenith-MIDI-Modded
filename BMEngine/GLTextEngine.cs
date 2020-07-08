@@ -156,6 +156,7 @@ void main()
             charMapTex = GL.GenTexture();
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void SetFont(string font, int size)
         {
             var bitmap = GenerateCharacters(size, font, out mapCharSize, out charSizes);
@@ -165,12 +166,14 @@ void main()
             FontSize = size;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void SetFont(string font, int size, string charmap)
         {
             Characters = charmap;
             SetFont(font, size);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void SetFont(string font, System.Drawing.FontStyle fontStyle, int size)
         {
             var bitmap = GenerateCharacters(size, font, fontStyle, out mapCharSize, out charSizes);
@@ -180,12 +183,14 @@ void main()
             FontSize = size;
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void SetFont(string font, System.Drawing.FontStyle fontStyle, int size, string charmap)
         {
             Characters = charmap;
             SetFont(font, fontStyle, size);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         void loadImage(Bitmap image, int texID)
         {
             GL.BindTexture(TextureTarget.Texture2D, texID);
@@ -299,6 +304,7 @@ void main()
             //GL.DisableVertexAttribArray(1);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public SizeF GetBoundBox(string text)
         {
             Vector2 curpos = new Vector2(0, 0);
@@ -323,6 +329,7 @@ void main()
             return new SizeF(maxWidth + padding * 2, mapCharSize.Height * rows);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         void FlushQuadBuffer(bool check = true)
         {
             if (quadBufferPos < quadBufferLength && check) return;
@@ -350,11 +357,13 @@ void main()
         private string Characters = @" qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789µ§½!""#¤%&/()=?^*@£€${[]}\~¨'-_.:,;<>|°©®±¥";
         private const int charImWidth = 20;
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public Bitmap GenerateCharacters(int fontSize, string fontName, out Size charSize, out SizeF[] charSizes)
         {
             return GenerateCharacters(fontSize, fontName, System.Drawing.FontStyle.Regular, out charSize, out charSizes);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public Bitmap GenerateCharacters(int fontSize, string fontName, System.Drawing.FontStyle fontStyle, out Size charSize, out SizeF[] charSizes)
         {
             charSizes = new SizeF[Characters.Length];
@@ -387,6 +396,7 @@ void main()
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private Bitmap GenerateCharacter(Font font, char c)
         {
             var size = GetSize(font, c);
@@ -398,6 +408,7 @@ void main()
             }
             return bmp;
         }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         private SizeF GetSize(Font font, char c)
         {
             using (var bmp = new Bitmap(512, 512))

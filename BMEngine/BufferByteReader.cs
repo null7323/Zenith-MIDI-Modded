@@ -21,6 +21,7 @@ namespace ZenithEngine
         byte[] bufferNext;
         Task nextReader = null;
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public BufferByteReader(Stream stream, int buffersize, long streamstart, long streamlen)
         {
             if (buffersize > streamlen) buffersize = (int)streamlen;
@@ -69,6 +70,7 @@ namespace ZenithEngine
 
         public int Pushback = -1;
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public byte Read()
         {
             if (Pushback != -1)
@@ -89,9 +91,11 @@ namespace ZenithEngine
             else throw new IndexOutOfRangeException();
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public byte ReadFast()
         {
-            byte b = buffer[bufferpos++];
+            byte b = buffer[bufferpos];
+            ++bufferpos;
             if (bufferpos < maxbufferpos) return b;
             else if (bufferpos >= buffersize)
             {
@@ -112,9 +116,9 @@ namespace ZenithEngine
 
         public void Skip(int count)
         {
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < count; ++i)
             {
-                if(Pushback != -1)
+                if (Pushback != -1)
                 {
                     Pushback = -1;
                     continue;
@@ -127,7 +131,7 @@ namespace ZenithEngine
                     bufferpos = 0;
                     UpdateBuffer(pos);
                 }
-                else throw new IndexOutOfRangeException();
+                else new IndexOutOfRangeException();
             }
         }
 

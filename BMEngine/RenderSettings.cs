@@ -96,11 +96,29 @@ namespace ZenithEngine
         // width, height
         public int preview_width = /*(int)(OpenTK.DisplayDevice.Default.Width / 1.5)*/1920;
         public int preview_height = /*(int)(OpenTK.DisplayDevice.Default.Width / 1.5) / 16 * 9*/1080;
-        // note buffer size ratio
-        public double noteBufferSizeRadio = 1;
         // max render memory
         public long maxRenderRAM = 8192;
         // enable memory limit (or not)
         public bool enableMemoryLimit = true;
+        // auto disable kdmapi when rendering (in order to save memory)
+        public bool autoDisableKDMAPIWhenRendering = true;
+        // enable memory saving mode (or not)
+        public bool enableMemorySavingMode = false;
+        // full arg
+        public bool useFullArguments = false;
+        public string fullArgs = "";
+        // collect memory by notes
+        public bool collectMemoryByNotes = false;
+        public long collectLimit = 1500000;
+        // adjust memory collection automatically (or not?)
+        public bool autoAdjustCollection = false;
+
+        public bool disableInfoWriting = false;
+
+        public bool useMultithreadToLoadMidi = true;
+
+        public long renderedFrames = 0;
+
+        public string ffMergeInfo = "";
     }
 }

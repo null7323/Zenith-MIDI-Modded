@@ -4,17 +4,13 @@
 
 #### New Features | 新特性
 
-- Faster | 导出视频更快
+- Render faster | 导出视频更快
+- 'Render Info' Tab | 渲染信息栏
 - Support more encoders | 支持更多编码器
 - Support parameter '-filter_threads' | 支持-filter threads参数
 - Support more YUV methods | 支持更多YUV方法  
 - Miditrail+: You could change note width and aura radius | 您可以在Miditrail+插件设定音符宽度和光晕半径
 - You could set preview resolution | 您可以设定预览分辨率
-
-#### Known Bugs | 已知的漏洞
-
-- 'Notes drawn' is always 0 when using 'Scripted' | 使用Scripted插件时绘制的音符总是0
-- Encoder 'png' may not work correctly | "png" 编码器可能不会正常工作
 
 #### Removed Features | 移除的特性
 
@@ -24,17 +20,15 @@
 
 #### Tips | 提示
 
-This version may not as stable as original Zenith
+This version may not as stable as original Zenith, and take more memory while rendering.
 
-此版本可能没有Zenith原版稳定
+此版本可能没有Zenith原版稳定，并且渲染时可能占用更多的内存。
 
 #### Authors | 制作者
 
 Original Author: Arduano | 原作者 Arduano
 
-Modified by: qishipai and me | 感谢Qishipai的支持
-
 #### License | 许可
 
-Zenith (Modified) is licensed under the term of the <a href="https://github.com/arduano/Zenith-MIDI/blob/master/LICENSE">DBAD Public License</a>.
+Zenith (Modded) is licensed under the term of the <a href="https://github.com/arduano/Zenith-MIDI/blob/master/LICENSE">DBAD Public License</a>.
 

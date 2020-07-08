@@ -22,11 +22,11 @@ namespace ZenithEngine
         public NoteColor color;
     }
 
-    public class NoteColor
+    public struct NoteColor
     {
         public Color4 left;
         public Color4 right;
-        public bool isDefault = true;
+        public bool isDefault;// = true;
     }
 
     public struct PlaybackEvent
@@ -52,8 +52,8 @@ namespace ZenithEngine
 
     public class TimeSignature
     {
-        public int numerator { get; internal set; }
-        public int denominator { get; internal set; }
+        public int numerator /*{ get; internal set; }*/;
+        public int denominator/* { get; internal set; }*/;
     }
 
     public class MidiTrack : IDisposable
@@ -73,7 +73,7 @@ namespace ZenithEngine
         MidiFile midi;
 
         public FastList<Note>[] UnendedNotes = null;
-        public LinkedList<Tempo> Tempos = new LinkedList<Tempo>();
+        public FastList<Tempo> Tempos = new FastList<Tempo>();
 
         FastList<Note> globalDisplayNotes;
         FastList<Tempo> globalTempoEvents;
@@ -120,28 +120,37 @@ namespace ZenithEngine
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public void SetZeroColors()
         {
             for (int i = 0; i < 16; ++i)
             {
-                if (zeroTickTrkColors[i] != null)
-                {
-                    trkColors[i].left = zeroTickTrkColors[i].left;
-                    trkColors[i].right = zeroTickTrkColors[i].right;
-                }
-                ++i;
-                if (zeroTickTrkColors[i] != null)
-                {
-                    trkColors[i].left = zeroTickTrkColors[i].left;
-                    trkColors[i].right = zeroTickTrkColors[i].right;
-                }
-                ++i;
-                if (zeroTickTrkColors[i] != null)
-                {
-                    trkColors[i].left = zeroTickTrkColors[i].left;
-                    trkColors[i].right = zeroTickTrkColors[i].right;
-                }
-                ++i;
+                //if (zeroTickTrkColors[i] != default)
+                //{
+                //    trkColors[i].left = zeroTickTrkColors[i].left;
+                //    trkColors[i].right = zeroTickTrkColors[i].right;
+                //}
+                //++i;
+                //if (zeroTickTrkColors[i] != null)
+                //{
+                //    trkColors[i].left = zeroTickTrkColors[i].left;
+                //    trkColors[i].right = zeroTickTrkColors[i].right;
+                //}
+                //++i;
+                //if (zeroTickTrkColors[i] != null)
+                //{
+                //    trkColors[i].left = zeroTickTrkColors[i].left;
+                //    trkColors[i].right = zeroTickTrkColors[i].right;
+                //}
+                //++i;
+                //if (zeroTickTrkColors[i] != null)
+                //{
+                //    trkColors[i].left = zeroTickTrkColors[i].left;
+                //    trkColors[i].right = zeroTickTrkColors[i].right;
+                //}
+                trkColors[i].left = zeroTickTrkColors[i].left;
+                trkColors[i].right = zeroTickTrkColors[i].right;
+                trkColors[i].isDefault = true;
             }
         }
 
@@ -162,22 +171,23 @@ namespace ZenithEngine
             // for (int i = 0; i < 16; i++) zeroTickTrkColors[i] = null;
             for (int i = 0; i < 16; ++i)
             {
-                zeroTickTrkColors[i] = null;
+                zeroTickTrkColors[i] = default;
                 ++i;
-                zeroTickTrkColors[i] = null;
+                zeroTickTrkColors[i] = default;
                 ++i;
-                zeroTickTrkColors[i] = null;
+                zeroTickTrkColors[i] = default;
                 ++i;
-                zeroTickTrkColors[i] = null;
+                zeroTickTrkColors[i] = default;
 
             }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         long ReadVariableLen()
         {
             byte c;
             int val = 0;
-            for (int i = 0; i < 4; i++)
+            /*for (int i = 0; i < 4; i++)
             {
                 c = reader.ReadFast();
                 if (c > 0x7F)
@@ -189,6 +199,46 @@ namespace ZenithEngine
                     val = val << 7 | c;
                     return val;
                 }
+            }*/
+            c = reader.ReadFast();
+            if (c > 0x7F)
+            {
+                val = (val << 7) | (c & 0x7F);
+            }
+            else
+            {
+                val = val << 7 | c;
+                return val;
+            }
+            c = reader.ReadFast();
+            if (c > 0x7F)
+            {
+                val = (val << 7) | (c & 0x7F);
+            }
+            else
+            {
+                val = val << 7 | c;
+                return val;
+            }
+            c = reader.ReadFast();
+            if (c > 0x7F)
+            {
+                val = (val << 7) | (c & 0x7F);
+            }
+            else
+            {
+                val = val << 7 | c;
+                return val;
+            }
+            c = reader.ReadFast();
+            if (c > 0x7F)
+            {
+                val = (val << 7) | (c & 0x7F);
+            }
+            else
+            {
+                val = val << 7 | c;
+                return val;
             }
             return val;
         }
@@ -247,7 +297,7 @@ namespace ZenithEngine
 
         byte prevCommand = 0;
         bool timebase = false;
-        public void ParseNextEvent()
+        /*public void ParseNextEvent()
         {
             try
             {
@@ -295,13 +345,15 @@ namespace ZenithEngine
                     }
                     else
                     {
-                        Note n = new Note();
-                        n.start = time;
-                        n.key = note;
-                        n.color = trkColors[channel];
-                        n.channel = channel;
-                        n.vel = vel;
-                        n.track = trackID;
+                        Note n = new Note
+                        {
+                            start = time,
+                            key = note,
+                            color = trkColors[channel],
+                            channel = channel,
+                            vel = vel,
+                            track = trackID
+                        };
                         if (UnendedNotes == null)
                         {
                             UnendedNotes = new FastList<Note>[256 * 16];
@@ -679,6 +731,355 @@ namespace ZenithEngine
             }
             catch
             { }
+        }*/
+        public void ParseNextEvent()
+        {
+            try
+            {
+
+                if (!readDelta)
+                {
+                    trackTime += ReadVariableLen();
+                }
+                readDelta = false;
+
+                double time = trackTime;
+                if (timebase)
+                    time = trackFlexTime;
+
+                byte command = reader.ReadFast();
+                if (command < 0x80)
+                {
+                    reader.Pushback = command;
+                    command = prevCommand;
+                }
+                prevCommand = command;
+                byte comm = (byte)(command & 0b11110000);
+                // variables
+                int channel;
+                byte note;
+                byte vel;
+                int size;
+                char[] text;
+                string str;
+                FastList<Note> l;
+                // end
+                switch (comm)
+                {
+                    case 0b10010000:
+                        channel = (byte)(command & 0b00001111);
+                        note = reader.Read();
+                        vel = reader.ReadFast();
+
+                        if (settings.playbackEnabled && vel > 10)
+                        {
+                            globalPlaybackEvents.Add(new PlaybackEvent()
+                            {
+                                pos = time,
+                                val = command | (note << 8) | (vel << 16)
+                            });
+                        }
+                        if (vel == 0)
+                        {
+                            l = UnendedNotes[note << 4 | channel];
+                            if (!l.ZeroLen)
+                            {
+                                Note n = l.Pop();
+                                n.end = time;
+                                n.hasEnded = true;
+                            }
+                        }
+                        else
+                        {
+                            Note n = new Note
+                            {
+                                start = time,
+                                key = note,
+                                color = trkColors[channel],
+                                channel = (byte)channel,
+                                vel = vel,
+                                track = trackID
+                            };
+                            if (UnendedNotes == null)
+                            {
+                                UnendedNotes = new FastList<Note>[256 * 16];
+                                for (int i = 0; i < 256 * 16; ++i)
+                                {
+                                    UnendedNotes[i] = new FastList<Note>();
+                                }
+                            }
+                            UnendedNotes[note << 4 | channel].Add(n);
+                            globalDisplayNotes.Add(n);
+                        }
+                        break;
+                    case 0b10000000:
+                        channel = command & 0b00001111;
+                        note = reader.Read();
+                        vel = reader.ReadFast();
+                        l = UnendedNotes[note << 4 | channel];
+                        if (!l.ZeroLen)
+                        {
+                            try
+                            {
+                                Note n = l.Pop();
+
+                                if (settings.playbackEnabled && n.vel > 10)
+                                {
+                                    globalPlaybackEvents.Add(new PlaybackEvent()
+                                    {
+                                        pos = time,
+                                        val = command | (note << 8) | (vel << 16)
+                                    });
+                                }
+                                n.end = time;
+                                n.hasEnded = true;
+                            }
+                            catch
+                            { }
+                        }
+                        break;
+                    case 0b10100000:
+                        channel = command & 0b00001111;
+                        note = reader.Read();
+                        vel = reader.Read();
+                        if (settings.playbackEnabled)
+                        {
+                            globalPlaybackEvents.Add(new PlaybackEvent()
+                            {
+                                pos = time,
+                                val = command | (note << 8) | (vel << 16)
+                            });
+                        }
+                        break;
+                    case 0b11000000:
+                        channel = command & 0b00001111;
+                        byte program = reader.Read();
+                        if (settings.playbackEnabled)
+                        {
+                            globalPlaybackEvents.Add(new PlaybackEvent()
+                            {
+                                pos = time,
+                                val = command | (program << 8)
+                            });
+                        }
+                        break;
+                    case 0b11010000:
+                            channel = command & 0b00001111;
+                            byte pressure = reader.Read();
+                            if (settings.playbackEnabled)
+                            {
+                                globalPlaybackEvents.Add(new PlaybackEvent()
+                                {
+                                    pos = time,
+                                    val = command | (pressure << 8)
+                                });
+                            }
+                        break;
+                    case 0b11100000:
+                            channel = command & 0b00001111;
+                            byte _l = reader.Read();
+                            byte m = reader.Read();
+                            if (settings.playbackEnabled)
+                            {
+                                globalPlaybackEvents.Add(new PlaybackEvent()
+                                {
+                                    pos = time,
+                                    val = command | (_l << 8) | (m << 16)
+                                });
+                            }
+                        break;
+                    case 0b10110000:
+                            channel = command & 0b00001111;
+                            byte cc = reader.Read();
+                            byte vv = reader.Read();
+                            if (settings.playbackEnabled)
+                            {
+                                globalPlaybackEvents.Add(new PlaybackEvent()
+                                {
+                                    pos = time,
+                                    val = command | (cc << 8) | (vv << 16)
+                                });
+                            }
+                            break;
+                    default:
+                        switch (command)
+                        {
+                            case 0b11110000:
+                                while (reader.Read() != 0b11110111) ;
+                                break;
+                            case 0b11110100:
+                            case 0b11110001:
+                            case 0b11110101:
+                            case 0b11111001:
+                            case 0b11111101:
+                                break;
+                            case 0b11110010:
+                                channel = command & 0b00001111;
+                                byte ll = reader.Read();
+                                byte mm = reader.Read();
+                                break;
+                            case 0b11110011:
+                                byte ss = reader.Read();
+                                break;
+                            case 0b11110110:
+                            case 0b11110111:
+                            case 0b11111000:
+                            case 0b11111010:
+                            case 0b11111100:
+                            case 0b11111110:
+                                break;
+                            case 0xFF:
+                                command = reader.Read();
+                                byte[] data;
+                                switch (command)
+                                {
+                                    case 0x00:
+                                        if (reader.Read() != 2)
+                                        {
+                                            throw new Exception("Corrupt Track");
+                                        }
+                                        reader.Read();
+                                        reader.Read();
+                                        break;
+                                    case 0x01:
+                                    case 0x02:
+                                    case 0x03:
+                                    case 0x04:
+                                    case 0x05:
+                                    case 0x06:
+                                    case 0x07:
+                                    case 0x08:
+                                    case 0x09:
+                                        size = (int)ReadVariableLen();
+                                        text = new char[size];
+                                        for (int i = 0; i < size; ++i)
+                                        {
+                                            text[i] = (char)reader.Read();
+                                        }
+                                        str = new string(text);
+                                        break;
+                                    case 0x0A:
+                                        size = (int)ReadVariableLen();
+                                        data = new byte[size];
+                                        for (int i = 0; i < size; i++)
+                                        {
+                                            data[i] = reader.Read();
+                                        }
+                                        if (data.Length == 8 || data.Length == 12)
+                                        {
+                                            if (data[0] == 0x00 &&
+                                                data[1] == 0x0F)
+                                            {
+                                                Color4 col1 = new Color4(data[4], data[5], data[6], data[7]);
+                                                Color4 col2;
+                                                if (data.Length == 12)
+                                                    col2 = new Color4(data[8], data[9], data[10], data[11]);
+                                                else col2 = col1;
+                                                if (data[2] < 0x10 || data[2] == 0x7F)
+                                                {
+                                                    var c = new ColorChange() { pos = time, col1 = col1, col2 = col2, channel = data[2], track = this };
+                                                    globalColorEvents.Add(c);
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case 0x20:
+                                            command = reader.Read();
+                                            if (command != 1)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            channelPrefix = reader.Read();
+                                        break;
+                                    case 0x21:
+                                            command = reader.Read();
+                                            if (command != 1)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            reader.Skip(1);
+                                        //TODO:  MIDI port
+                                        break;
+                                    case 0x2F:
+                                            command = reader.Read();
+                                            if (command != 0)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            EndTrack();
+                                        break;
+                                    case 0x51:
+                                        command = reader.Read();
+                                        if (command != 3)
+                                        {
+                                            throw new Exception("Corrupt Track");
+                                        }
+                                        int btempo = 0;
+                                        btempo = (btempo << 8) | reader.Read();
+                                        btempo = (btempo << 8) | reader.Read();
+                                        btempo = (btempo << 8) | reader.Read();
+                                        if (!timebase)
+                                        {
+                                            Tempo t = new Tempo
+                                            {
+                                                pos = trackTime,
+                                                tempo = btempo
+                                            };
+                                            lock (globalTempoEvents)
+                                            {
+                                                globalTempoEvents.Add(t);
+                                            }
+                                        }
+                                        midi.tempoTickMultiplier = ((double)midi.division / btempo) * 1000;
+                                        break;
+                                    case 0x54:
+                                            command = reader.Read();
+                                            if (command != 5)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            reader.Skip(4);
+                                        break;
+                                    case 0x58:
+                                            command = reader.Read();
+                                            if (command != 4)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            reader.Skip(4);
+                                        break;
+                                    case 0x59:
+                                            command = reader.Read();
+                                            if (command != 2)
+                                            {
+                                                throw new Exception("Corrupt Track");
+                                            }
+                                            reader.Skip(2);
+                                        //TODO: Key Signature
+                                        break;
+                                    case 0x7F:
+                                            size = (int)ReadVariableLen();
+                                            data = new byte[size];
+                                            for (int i = 0; i < size; i++)
+                                            {
+                                                data[i] = reader.Read();
+                                            }
+                                        break;
+                                    default:
+                                        throw new Exception("Corrupt Track");
+                                }
+                                break;
+                            default:
+                                throw new Exception("Corrupt Track");
+                        }
+                        break;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+                EndTrack();
+            }
+            catch { }
         }
 
         public FastList<Tempo> TempoEvents = new FastList<Tempo>();
@@ -1088,7 +1489,7 @@ namespace ZenithEngine
                                             }
                                             int btempo = 0;
                                             for (int i = 0; i != 3; i++)
-                                                btempo = (int)((btempo << 8) | reader.Read());
+                                                btempo = (btempo << 8) | reader.Read();
                                             if (trackTime == 0)
                                             {
                                                 zerothTempo = btempo;
